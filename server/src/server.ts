@@ -1,13 +1,16 @@
-import express from "express";
+import express from 'express';
+ 
 
 const app = express();
 
 app.use(express.json());
 
-app.use("/", (req, res) => {
-    res.json("Hello World!");
+app.get("/", (req, res) => {
+    res.send("Hello World!")
 })
 
 app.listen(3000, () => {
-  console.log(`Server running on port 3000`);
-});
+    console.log("Express server has started!");
+})
+
+export const simpleSignInServer = app;

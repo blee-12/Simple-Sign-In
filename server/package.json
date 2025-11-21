@@ -1,28 +1,22 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node src/server.ts",
-    "dev": "nodemon --watch src --ext ts --exec node --loader ts-node/esm src/server.ts",
-    "lint": "eslint 'src/**/*.ts'"
+    "dev": "vite",
+    "start": "vite build && node dist/server.js",
+    "build": "vite build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
+  "description": "",
   "devDependencies": {
+    "vite": "^7.2.4",
+    "vite-plugin-node": "^7.0.0"
+  },
+  "dependencies": {
     "@types/express": "^5.0.5",
-    "@types/node": "^24.10.1",
-    "eslint": "^9.39.1",
-    "express": "^5.1.0",
-    "install": "^0.13.0",
-    "nodemon": "^3.1.11",
-    "npm": "^11.6.0",
-    "prettier": "^3.6.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "express": "^5.1.0"
   }
 }
