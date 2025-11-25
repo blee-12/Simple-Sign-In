@@ -22,6 +22,7 @@ const eventCollection = await events();
 let st1: User = {
   _id: new ObjectId(),
   email: "bwoods@stevens.edu",
+  password: "EncryptThis",
   first_name: "Bennett",
   last_name: "Woods",
   created_events: [],
