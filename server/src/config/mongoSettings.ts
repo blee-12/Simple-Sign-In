@@ -5,5 +5,5 @@ export interface MongoConfig {
 
 export const mongoConfig: MongoConfig = {
   serverUrl: "mongodb://localhost:27017/",
-  database: "asmVisDB",
+  database: "simple-signin-cs554",
 };
