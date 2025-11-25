@@ -5,6 +5,7 @@
 import bcrypt from 'bcryptjs';
 import { Request, Response, Router } from 'express';
 import { validateFirstName, validateLastName, validateEmail, validatePassword } from '../../../common/validation';
+import { User } from '../config/mongoCollections';
 
 const router = Router();
 
@@ -39,10 +40,10 @@ router.post("/signin", async (req: Request, res: Response) => {
     }
     // TODO: check against DB
     // ...
-    let user; // retrieved from DB
+    let user: User; // retrieved from DB
     // save to session
-    req.session.first_name = user.first_name;
-    req.session.last_name = user.last_name;
+    // req.session.first_name = user.first_name; // TODO: uncomment when user is actually fetched
+    // req.session.last_name = user.last_name; // TODO: uncomment when user is actually fetched
     req.session.email = email;
     res.send({status: "signed in"});
 });

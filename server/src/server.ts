@@ -40,12 +40,13 @@ io.on("connection", (socket) => {
     console.log("socket connection received");
     // @ts-ignore
     const session = socket.request.session;
-    if (session.username) {
+    if (session.email) {
         console.log(`session ${session.email}`);
     }
     else {
         console.log("no session");
     }
+    // TODO: remove when we actually do something with the socket
     socket.disconnect();
 });
 
