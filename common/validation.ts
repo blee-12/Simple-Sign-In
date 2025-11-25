@@ -37,3 +37,9 @@ export function validatePassword(password: string) {
     if (/^[A-z0-9]*$/.test(password)) throw new Error("Password must contain a special character");
     return password;
 }
+
+export function validateStrAsObjectId(id: string, label = "ID") {
+    id = validateAndTrimString(id, label, 24, 24);
+    if (!/^[0-9a-fA-F]{24}$/.test(id)) throw new Error(`${label} does not represent a valid ObjectId string`);
+    return id;
+}
