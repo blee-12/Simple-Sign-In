@@ -1,5 +1,5 @@
 import { MongoClient, Db } from "mongodb";
-import { mongoConfig } from "./mongoSettings.js";
+import { mongoConfig } from "./mongoSettings.ts";
 
 // Type variables as either the object or undefined
 let _connection: MongoClient | undefined = undefined;

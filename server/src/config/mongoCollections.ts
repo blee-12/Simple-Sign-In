@@ -1,28 +1,24 @@
-import { Collection, Document, ObjectId } from "mongodb";
-import { dbConnection } from "./mongoConnection.js";
+import { Collection, Document } from "mongodb";
+import { dbConnection } from "./mongoConnection.ts";
 
 // Defining ts types for the documents:
 
 // SignIn object, doesn't need to extend document
 export interface SignIn {
-  userID: ObjectId;
+  userID: string;
   timestamp: Date;
 }
 
 // User document
 export interface User extends Document {
-  _id: ObjectId;
   email: string;
   password: string;
   first_name: string;
   last_name: string;
-  created_events: ObjectId[];
-  attended_events: ObjectId[];
 }
 
 // Event document
 export interface Event extends Document {
-  _id: ObjectId;
   created_by: User["_id"];
   name: string;
   time_start: Date;
