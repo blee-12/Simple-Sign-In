@@ -11,7 +11,7 @@ export interface SignIn {
 
 // User document
 export interface User extends Document {
-  _id?: ObjectId;
+  _id: ObjectId;
   email: string;
   first_name: string;
   last_name: string;
@@ -21,12 +21,13 @@ export interface User extends Document {
 
 // Event document
 export interface Event extends Document {
-  _id?: string;
-  created_by: ObjectId;
+  _id: ObjectId;
+  created_by: User["_id"];
   name: string;
   time_start: Date;
   time_end: Date;
-  attending_users: SignIn["userID"];
+  attending_users: SignIn["userID"][]; // a list of specifically userIDs from SignIn Objects
+  checked_in_users: SignIn[]; // a list if SignIn Objects
   code: string | null;
 }
 
