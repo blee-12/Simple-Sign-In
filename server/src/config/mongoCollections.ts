@@ -13,6 +13,7 @@ export interface SignIn {
 export interface User extends Document {
   _id: ObjectId;
   email: string;
+  password: string;
   first_name: string;
   last_name: string;
   created_events: ObjectId[];
