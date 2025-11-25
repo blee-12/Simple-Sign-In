@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "start": "vite build && node dist/server.js",
+    "start": "vite build && node dist/server.cjs",
     "build": "vite build",
     "seed": "tsx src/tasks/seed.ts",
     "db_test": "tsx src/tasks/dbTest.ts"
