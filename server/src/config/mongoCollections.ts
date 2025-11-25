@@ -44,4 +44,4 @@ const getCollectionFn = <T extends Document = Document>(collection: string) => {
 };
 
 export const users = getCollectionFn<User>("users");
-export const snippets = getCollectionFn<Event>("events");
+export const events = getCollectionFn<Event>("events");
