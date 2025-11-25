@@ -2,21 +2,26 @@
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "start": "vite build && node dist/server.js",
-    "build": "vite build"
+    "start": "vite build && node dist/server.cjs",
+    "build": "vite build",
+    "seed": "tsx src/tasks/seed.ts",
+    "db_test": "tsx src/tasks/dbTest.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "tsx": "^4.20.6",
     "vite": "^7.2.4",
     "vite-plugin-node": "^7.0.0"
   },
   "dependencies": {
     "@types/express": "^5.0.5",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mongodb": "^6.21.0"
   }
 }

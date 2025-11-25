@@ -1,0 +1,67 @@
+/* SEED WILL CLEAR THE DB, BE WARNED */
+import { dbConnection, closeConnection } from "../config/mongoConnection.js";
+import {
+  users,
+  events,
+  User,
+  Event,
+  SignIn,
+} from "../config/mongoCollections.js";
+import { ObjectId } from "mongodb";
+
+const db = await dbConnection();
+await db.dropDatabase();
+
+console.log("Database cleared!");
+
+const userCollection = await users();
+const eventCollection = await events();
+
+// create the first user and event:
+
+let st1: User = {
+  _id: new ObjectId(),
+  email: "bwoods@stevens.edu",
+  password: "EncryptThis",
+  first_name: "Bennett",
+  last_name: "Woods",
+  created_events: [],
+  attended_events: [],
+};
+
+let ev1: Event = {
+  _id: new ObjectId(),
+  created_by: st1._id,
+  name: "Code this website!",
+  time_start: new Date(),
+  time_end: new Date(), // I dont wanna mess with dates rn
+  attending_users: [],
+  checked_in_users: [],
+  code: null,
+};
+
+// create the signIn object for st1
+const signIn1: SignIn = {
+  userID: st1._id,
+  timestamp: new Date(),
+};
+
+// chuck this into the event.
+ev1.attending_users.push(signIn1.userID);
+ev1.checked_in_users.push(signIn1);
+
+// also update the user document with created events + attended events.
+st1.created_events.push(ev1._id);
+st1.attended_events.push(ev1._id);
+
+// add the events to the db.
+try {
+  await userCollection.insertOne(st1);
+  await eventCollection.insertOne(ev1);
+} catch (e) {
+  // on failure, exit.
+  console.log("failed to insert into collection: " + e);
+}
+
+// exit
+await closeConnection();
