@@ -51,7 +51,7 @@ io.on("connection", (socket) => {
 });
 
 // fallback error handler
-app.use(async (err: any, req: Request, res: Response) => {
+app.use(async (err: any, req: Request, res: Response, next: any) => {
     if (err.statusCode < 500)
         return res.status(err.statusCode).send({error: err.message});
     console.error("Unhandled server error:");
