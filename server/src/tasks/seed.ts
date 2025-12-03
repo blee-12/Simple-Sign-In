@@ -1,12 +1,14 @@
 /* SEED WILL CLEAR THE DB, BE WARNED */
-import { dbConnection, closeConnection } from "../config/mongoConnection.js";
+import { dbConnection, closeConnection } from "../config/mongoConnection.ts";
 import {
   users,
-  events,
+  events
+} from "../config/mongoCollections.ts";
+import type {
   User,
   Event,
-  SignIn,
-} from "../config/mongoCollections.js";
+  SignIn
+} from "../config/mongoCollections.ts";
 import { ObjectId } from "mongodb";
 
 const db = await dbConnection();
