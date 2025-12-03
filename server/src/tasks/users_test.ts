@@ -51,8 +51,7 @@ async function main() {
     console.log("3. Testing getAllUsers...");
     const userList = await userData.getAllUsers();
 
-    // should be 1 if duplicate failed, or 2 if duplicate bug exists
-
+    // should be 1 if duplicate failed, or 2 if it clones em.
     if (userList.length === 1) {
       console.log("PASS: Returned exactly 1 user.");
     } else {

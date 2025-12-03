@@ -23,7 +23,7 @@ export function validateLastName(name: string) {
 
 export function validateEmail(email: string) {
     email = validateAndTrimString(email, "email", 3, 100);
-    const regex = /^(?:[A-z1-9]+[.-])*[A-z1-9]+@(?:[A-z1-9.-]+[.-])*[A-z1-9]+\.[A-z1-9]+$/;
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!regex.test(email)) throw new Error("Invalid email");
     return email;
 }
@@ -42,4 +42,15 @@ export function validateStrAsObjectId(id: string, label = "ID") {
     id = validateAndTrimString(id, label, 24, 24);
     if (!/^[0-9a-fA-F]{24}$/.test(id)) throw new Error(`${label} does not represent a valid ObjectId string`);
     return id;
+}
+
+export function validateStartEndDates(start: Date, end: Date) {
+    // start must be before end.
+    if (start > end) throw new Error ("Start")
+
+    // start must be in the future, or today.
+
+    // end must be from now into 2 years.
+
+    // minimum event length 15 mins.
 }

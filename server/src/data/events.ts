@@ -1,7 +1,7 @@
 import { ObjectId, Collection } from "mongodb";
 import { events } from "../config/mongoCollections.ts";
 import type { Event } from "../config/mongoCollections.ts";
-import { validateStrAsObjectId } from "../../../common/validation.ts";
+import { validateStrAsObjectId, validateAndTrimString } from "../../../common/validation.ts";
 
 // example data function
 let exportedMethods = {
@@ -23,6 +23,15 @@ let exportedMethods = {
   
       return event;
     },
+
+    async createEvent(createdBy: string, name: string, timeStart: Date, timeEnd: Date) {
+      createdBy = validateStrAsObjectId(createdBy);
+
+      name = validateAndTrimString(name, "Event Name", 5, 100);
+
+      
+
+    }
 };
 
 export default exportedMethods;
