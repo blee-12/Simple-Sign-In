@@ -1,4 +1,4 @@
-import { Collection, Document } from "mongodb";
+import type { Collection, Document } from "mongodb";
 import { dbConnection } from "./mongoConnection.ts";
 
 // Defining ts types for the documents:
