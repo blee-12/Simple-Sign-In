@@ -1,5 +1,6 @@
 import { ObjectId, Collection } from "mongodb";
-import { events, Event } from "../config/mongoCollections.ts";
+import { events } from "../config/mongoCollections.ts";
+import type { Event } from "../config/mongoCollections.ts";
 import { validateStrAsObjectId } from "../../../common/validation.ts";
 
 // example data function
