@@ -1,6 +1,7 @@
 import { ObjectId, Collection } from "mongodb";
 import { users } from "../config/mongoCollections.ts";
 import type { User } from "../config/mongoCollections.ts";
+import { BadInputError, NotFoundError, InternalServerError} from "../../../common/errors.ts";
 import { validateEmail, validateFirstName, validateLastName, validatePassword, validateStrAsObjectId } from "../../../common/validation.ts"; 
 
 // helper function, checks if the email is in use:
@@ -10,7 +11,7 @@ async function emailInUse(email: string): Promise<Boolean> {
   const userCollection = await users();
   const inUse = await userCollection.findOne({email: email});
 
-  if (inUse) throw new Error("Email is already in use!");
+  if (inUse) throw new BadInputError("Email is already in use!");
   return false;
 }
 
@@ -29,7 +30,7 @@ let exportedMethods = {
     const user = await userCollection.findOne({ _id: new ObjectId(id) });
 
     if (!user) {
-      throw new Error(`Could not find user with id: ${id}`);
+      throw new NotFoundError(`Could not find user with id: ${id}`);
     }
 
     return user;
@@ -42,7 +43,7 @@ let exportedMethods = {
     const user = await userCollection.findOne({ email: email});
 
     if (!user) {
-      throw new Error(`Could not find user with email: ${email}`);
+      throw new NotFoundError(`Could not find user with email: ${email}`);
     }
 
     return user;
@@ -55,7 +56,7 @@ let exportedMethods = {
     const user = await userCollection.findOneAndDelete({_id: new ObjectId(id)});
 
     if (!user) {
-      throw new Error(`Could not delete user with id: ${id}`);
+      throw new NotFoundError(`Could not delete user with id: ${id}`);
     }
 
     return user;
@@ -80,7 +81,7 @@ let exportedMethods = {
     }
 
     if (!modified){
-      throw new Error("Must change provide more than just an email argument!");
+      throw new BadInputError("Must change provide more than just an email argument!");
     }
 
     const userCollection = await users();
@@ -94,7 +95,7 @@ let exportedMethods = {
     );
 
     if (!ret) {
-      throw new Error(`could not edit user with email ${email}!`);
+      throw new NotFoundError(`could not edit user with email ${email}!`);
     }
 
     return user;
@@ -120,7 +121,7 @@ let exportedMethods = {
     const userCollection = await users();
     const added = await userCollection.insertOne(user);
 
-    if (!added) throw new Error(`Could not add user ${email}!`);
+    if (!added) throw new InternalServerError(`Could not add user ${email}!`);
 
     return user;
   }

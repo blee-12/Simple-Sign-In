@@ -1,13 +1,14 @@
 import { ObjectId, Collection } from "mongodb";
 import { events } from "../config/mongoCollections.ts";
 import type { Event, User, SignIn } from "../config/mongoCollections.ts";
+import { BadInputError, NotFoundError, InternalServerError} from "../../../common/errors.ts";
 import { validateStrAsObjectId, validateAndTrimString, validateStartEndDates, validateEmail } from "../../../common/validation.ts";
 import { userData } from "./index.ts";
 
 async function isEventNameInUse(name: string) {
   const eventCollection = await events();
   let sameName = await eventCollection.findOne( { name } );
-  if (sameName) throw new Error(`Event name "${name}" is already in use`);
+  if (sameName) throw new BadInputError(`Event name "${name}" is already in use`);
 }
 
 // example data function
@@ -25,7 +26,7 @@ let exportedMethods = {
       const event = await eventCollection.findOne({ _id: new ObjectId(id) });
   
       if (!event) {
-        throw new Error(`Could not find event with id: ${id}`);
+        throw new NotFoundError(`Could not find event with id: ${id}`);
       }
   
       return event;
@@ -53,7 +54,7 @@ let exportedMethods = {
       const e = await eventCollection.insertOne(event);
 
       if (!e) {
-        throw new Error(`Could not create event ${name}`);
+        throw new NotFoundError(`Could not create event ${name}`);
       }
 
       return event;
@@ -68,7 +69,7 @@ let exportedMethods = {
       const eventCollection = await events();
       let ret = await eventCollection.deleteOne( { _id: new ObjectId(id) } );
 
-      if (!ret) throw new Error("Event could not be deleted");
+      if (!ret) throw new NotFoundError("Event could not be deleted");
 
       return ret;
     },
@@ -77,7 +78,7 @@ let exportedMethods = {
       id = validateStrAsObjectId(id);
 
       let event: Event = await this.getEventByID(id);
-      if (!event) throw new Error("Event not found!");
+      if (!event) throw new NotFoundError("Event not found!");
 
       let modified = false;
 
@@ -104,7 +105,7 @@ let exportedMethods = {
       }
 
       if (!modified) {
-        throw new Error("Must supply one field from {name, time_start, time_end} to modify!");
+        throw new BadInputError("Must supply one field from {name, time_start, time_end} to modify!");
       }
 
       const eventCollection = await events();
@@ -119,7 +120,7 @@ let exportedMethods = {
       );
       
       if (!ret) {
-        throw new Error(`could not edit event ${event.name}!`);
+        throw new NotFoundError(`could not edit event ${event.name}!`);
       }
   
       return ret;
@@ -131,7 +132,7 @@ let exportedMethods = {
       const eventCollection = await events();
       let event = await eventCollection.findOne({ name });
 
-      if (!event) throw new Error("Event could not be found!");
+      if (!event) throw new NotFoundError("Event could not be found!");
 
       return event;
     },
@@ -146,11 +147,11 @@ let exportedMethods = {
         user = await userData.getUserByID(userID);
       } 
 
-      if (!user) throw new Error("Must provide an email or userID to register a user")
+      if (!user) throw new BadInputError("Must provide an email or userID to register a user")
       
       const eventCollection = await events();
       const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { attending_users: user.email }});
-      if (!event) throw new Error("Couldn't add user to event!");
+      if (!event) throw new NotFoundError("Couldn't add user to event!");
     },
 
     async checkInUser(eventId:string, userID: string | null, email: string | null){
@@ -163,7 +164,7 @@ let exportedMethods = {
         user = await userData.getUserByID(userID);
       } 
 
-      if (!user) throw new Error("Must provide an email or userID to sign a user in!");
+      if (!user) throw new BadInputError("Must provide an email or userID to sign a user in!");
 
       let signin: SignIn = {
         userID: user._id,
@@ -172,7 +173,7 @@ let exportedMethods = {
 
       const eventCollection = await events();
       const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { checked_in_users: signin }})
-      if (!event) throw new Error("Couldn't add user to event!");
+      if (!event) throw new NotFoundError("Couldn't add user to event!");
 
       // could check if the user is registered?
       // for now, im just going to try to register the user if they are not already.
@@ -182,8 +183,6 @@ let exportedMethods = {
       } catch (_) {
         // do nothing lol.
       }
-
-      return event;
     },
 
     async unregisterUser(eventId:string, userID: string | null, email: string | null ) {
@@ -196,10 +195,12 @@ let exportedMethods = {
         user = await userData.getUserByID(userID);
       } 
 
-      if (!user) throw new Error("Must provide an email or userID to unregister a user!");
+      if (!user) throw new BadInputError("Must provide an email or userID to unregister a user!");
       
       const eventCollection = await events();
       const ret = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $pull: { attending_users: user.email }})
+    
+      if (!ret) throw new NotFoundError("Could not unregister user!");
     },
 
     async checkOutUser(eventId:string, userID: string | null, email: string | null) {
@@ -212,7 +213,7 @@ let exportedMethods = {
         user = await userData.getUserByID(userID);
       } 
 
-      if (!user) throw new Error("Must provide an email or userID to sign out a user!");
+      if (!user) throw new BadInputError("Must provide an email or userID to sign out a user!");
 
       const eventCollection = await events();
       const updateInfo = await eventCollection.findOneAndUpdate(
@@ -227,9 +228,7 @@ let exportedMethods = {
         { returnDocument: 'after' }
       );
 
-      if (!updateInfo) throw new Error("Could not remove check-in.");
-
-      return user;
+      if (!updateInfo) throw new NotFoundError("Could not remove check-in.");
     },
 
     async getEventCode(eventId: string) {
@@ -238,7 +237,7 @@ let exportedMethods = {
       const eventCollection = await events();
       let event = await eventCollection.findOne( {_id: new ObjectId(eventId)} );
 
-      if (!event) throw new Error("Event could not be found!")
+      if (!event) throw new NotFoundError("Event could not be found!")
 
       return event.code;
       
