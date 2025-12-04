@@ -27,8 +27,6 @@ let st1: User = {
   password: "EncryptThis",
   first_name: "Bennett",
   last_name: "Woods",
-  created_events: [],
-  attended_events: [],
 };
 
 let ev1: Event = {
@@ -49,12 +47,8 @@ const signIn1: SignIn = {
 };
 
 // chuck this into the event.
-ev1.attending_users.push(signIn1.userID);
+ev1.attending_users.push(signIn1.userID.toString());
 ev1.checked_in_users.push(signIn1);
-
-// also update the user document with created events + attended events.
-st1.created_events.push(ev1._id);
-st1.attended_events.push(ev1._id);
 
 // add the events to the db.
 try {
