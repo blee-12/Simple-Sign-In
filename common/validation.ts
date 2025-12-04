@@ -45,12 +45,12 @@ export function validateStrAsObjectId(id: string, label = "ID") {
 }
 
 export function validateStartEndDates(start: Date, end: Date) {
-    // start must be before end.
-    if (start > end) throw new Error ("Start")
-
-    // start must be in the future, or today.
-
-    // end must be from now into 2 years.
-
-    // minimum event length 15 mins.
+    if (start > end) throw new Error ("Start date of event must be before end date");
+    let NOW = new Date();
+    if (start < NOW) throw new Error ("Event start date cannot be in the past");
+    if (end > NOW) throw new Error ("Event end date cannot be in the past");
+    NOW.setFullYear(NOW.getFullYear() + 2);
+    if (end > NOW || start > NOW) throw new Error ("You can only schedule events 2 years in advance");
+    const diffTime = end.getTime() - start.getTime();
+    if (diffTime < 900000) throw new Error ("Events must last for at least 15 minutes");
 }
