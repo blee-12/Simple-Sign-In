@@ -84,7 +84,7 @@ let exportedMethods = {
     }
 
     const userCollection = await users();
-    const ret = await userCollection.findOneAndReplace({ email: email }, 
+    const ret = await userCollection.findOneAndUpdate({ email: email }, 
       { $set: 
         { 
           first_name: user.first_name, 
@@ -110,6 +110,7 @@ let exportedMethods = {
 
     // and now create a user object
     const user: User = { 
+      _id: new ObjectId(),
       email,
       first_name,
       last_name,
