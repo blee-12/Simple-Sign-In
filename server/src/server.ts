@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import configRoutes from './routes/index'
 import { createServer } from 'node:http';
 import { Server } from 'socket.io';
+import { HttpError } from '../../common/errors';
 import session from "express-session";
 import cors from 'cors';
 
@@ -51,8 +52,8 @@ io.on("connection", (socket) => {
 });
 
 // fallback error handler
-app.use(async (err: any, req: Request, res: Response, next: any) => {
-    if (err.statusCode < 500)
+app.use((err: any, req: Request, res: Response, next: any) => {
+    if (err.statusCode < 500 || err instanceof HttpError)
         return res.status(err.statusCode).send({error: err.message});
     console.error("Unhandled server error:");
     console.error(err);
