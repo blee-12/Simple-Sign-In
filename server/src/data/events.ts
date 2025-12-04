@@ -129,14 +129,14 @@ let exportedMethods = {
       name = validateAndTrimString(name, "Name", 5, 100);
       
       const eventCollection = await events();
-      let event = eventCollection.findOne({ name });
+      let event = await eventCollection.findOne({ name });
 
       if (!event) throw new Error("Event could not be found!");
 
       return event;
     },
 
-    async registerUser(eventId: string, email: string | null, userID: string | null ){
+    async registerUser(eventId: string, userID: string | null, email: string | null){
       eventId = validateStrAsObjectId(eventId);
 
       let user: User | null = null;
@@ -146,16 +146,14 @@ let exportedMethods = {
         user = await userData.getUserByID(userID);
       } 
 
-      if (!user) throw new Error("Must provide an email or userID to sign a user in!")
+      if (!user) throw new Error("Must provide an email or userID to register a user")
       
       const eventCollection = await events();
       const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { attending_users: user.email }});
       if (!event) throw new Error("Couldn't add user to event!");
-
-      return event;
     },
 
-    async signInUser(eventId:string, userID: string | null, email: string | null){
+    async checkInUser(eventId:string, userID: string | null, email: string | null){
       eventId = validateStrAsObjectId(eventId);
 
       let user: User | null = null;
@@ -176,10 +174,19 @@ let exportedMethods = {
       const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { checked_in_users: signin }})
       if (!event) throw new Error("Couldn't add user to event!");
 
+      // could check if the user is registered?
+      // for now, im just going to try to register the user if they are not already.
+
+      try {
+        await this.registerUser(eventId, user._id.toString(), null)
+      } catch (_) {
+        // do nothing lol.
+      }
+
       return event;
     },
 
-    async unregisterUser(eventId:string, userID: string | null, email: string | null) {
+    async unregisterUser(eventId:string, userID: string | null, email: string | null ) {
       eventId = validateStrAsObjectId(eventId);
 
       let user: User | null = null;
@@ -192,10 +199,10 @@ let exportedMethods = {
       if (!user) throw new Error("Must provide an email or userID to unregister a user!");
       
       const eventCollection = await events();
-      await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $pull: { attending_users: user.email }})
+      const ret = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $pull: { attending_users: user.email }})
     },
 
-    async signOut(eventId:string, userID: string | null, email: string | null) {
+    async checkOutUser(eventId:string, userID: string | null, email: string | null) {
       eventId = validateStrAsObjectId(eventId);
 
       let user: User | null = null;
