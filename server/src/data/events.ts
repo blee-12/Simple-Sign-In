@@ -1,5 +1,5 @@
 import { ObjectId, Collection } from "mongodb";
-import { events } from "../config/mongoCollections.ts";
+import { events, users } from "../config/mongoCollections.ts";
 import type { Event, User, SignIn } from "../config/mongoCollections.ts";
 import { BadInputError, NotFoundError, InternalServerError} from "../../../common/errors.ts";
 import { validateStrAsObjectId, validateAndTrimString, validateStartEndDates, validateEmail } from "../../../common/validation.ts";
@@ -241,7 +241,16 @@ let exportedMethods = {
 
       return event.code;
       
-    }
+    },
+
+    async getUserEvents(email: string) {
+      const eventCollection: Collection<Event> = await events();
+      const userCollection: Collection<User> = await users();
+      const user = await userCollection.findOne({email});
+      if (!user) throw new Error("User does not exist");
+      const eventList = await eventCollection.find({created_by: user._id}).toArray();
+      return eventList;
+  }
 };
 
 export default exportedMethods;
