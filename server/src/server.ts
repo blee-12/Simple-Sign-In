@@ -5,11 +5,17 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import session from "express-session";
 import cors from "cors";
+import { CLIENT_URL } from "./config/staticAssets";
 
 const app = express();
 const httpServer = createServer(app);
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: CLIENT_URL,
+    credentials: true,
+  })
+);
 
 // Session
 const sessionMiddleware = session({
