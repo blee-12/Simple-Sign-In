@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import { HttpError } from '../../common/errors';
 import session from "express-session";
 import cors from 'cors';
+import { ObjectId } from 'mongodb';
 
 const app = express();
 const httpServer = createServer(app);
@@ -23,6 +24,7 @@ app.use(sessionMiddleware);
 
 declare module "express-session" {
     interface SessionData {
+        _id: ObjectId,
         first_name: string,
         last_name: string,
         email: string,

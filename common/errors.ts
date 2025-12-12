@@ -32,7 +32,7 @@ export class UnauthorizedError extends HttpError {
 export class NotFoundError extends HttpError {
     constructor(message: string) { super(message, 404); }
 }
-
-
-
-
+// somewhere along the way, the server bungled it
+export class InternalServerError extends HttpError {
+    constructor(message: string) { super(message, 500); }
+}

@@ -7,15 +7,14 @@
     "dev": "vite",
     "start": "vite build && node dist/server.cjs",
     "build": "vite build",
-    "seed": "tsx src/tasks/seed.ts",
-    "db_test": "tsx src/tasks/dbTest.ts"
+    "seed": "node src/tasks/seed.ts",
+    "db_test": "node src/tasks/dbTest.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "tsx": "^4.20.6",
     "vite": "^7.2.4",
     "vite-plugin-node": "^7.0.0"
   },

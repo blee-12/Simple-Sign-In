@@ -1,38 +1,37 @@
-import { Collection, Document, ObjectId } from "mongodb";
-import { dbConnection } from "./mongoConnection.js";
+import { ObjectId } from "mongodb";
+import type { Collection } from "mongodb";
+import { dbConnection } from "./mongoConnection.ts";
 
 // Defining ts types for the documents:
 
-// SignIn object, doesn't need to extend document
+// SignIn object
 export interface SignIn {
-  userID: ObjectId;
+  userID: User["_id"];
   timestamp: Date;
 }
 
 // User document
-export interface User extends Document {
-  _id: ObjectId;
+export interface User {
+  _id: ObjectId; 
   email: string;
   password: string;
   first_name: string;
   last_name: string;
-  created_events: ObjectId[];
-  attended_events: ObjectId[];
 }
 
 // Event document
-export interface Event extends Document {
-  _id: ObjectId;
-  created_by: User["_id"];
+export interface Event {
+  _id: ObjectId; 
+  created_by: User["_id"]; 
   name: string;
   time_start: Date;
   time_end: Date;
-  attending_users: SignIn["userID"][]; // a list of specifically userIDs from SignIn Objects
-  checked_in_users: SignIn[]; // a list if SignIn Objects
+  attending_users: User["email"][];
+  checked_in_users: SignIn[]; 
   code: string | null;
 }
 
-const getCollectionFn = <T extends Document = Document>(collection: string) => {
+const getCollectionFn = <T extends object>(collection: string) => {
   let _col: Collection<T> | undefined = undefined;
 
   return async (): Promise<Collection<T>> => {
