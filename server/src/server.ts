@@ -66,7 +66,7 @@ app.use(async (err: any, req: Request, res: Response, next: any) => {
   return res.status(500).send({ error: "Internal server error" });
 });
 
-httpServer.listen(3001, () => {
+httpServer.listen(4000, () => {
   console.log("Express server has started!");
 });
 
