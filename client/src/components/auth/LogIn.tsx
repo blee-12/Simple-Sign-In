@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { validateEmail, validatePassword } from "../../lib/validation";
+import { validateEmail, validatePassword } from "../../../../common/validation";
 import { validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { useNavigate } from "react-router";

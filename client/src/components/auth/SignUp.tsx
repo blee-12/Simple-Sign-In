@@ -4,7 +4,7 @@ import {
   validateFirstName,
   validateLastName,
   validatePassword,
-} from "../../lib/validation";
+} from "../../../../common/validation";
 import { validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { useNavigate } from "react-router";
