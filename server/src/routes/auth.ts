@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { Request, Response, Router } from 'express';
 import { validateFirstName, validateLastName, validateEmail, validatePassword } from '../../../common/validation';
 import { User } from '../config/mongoCollections';
+import { userData } from '../data';
 
 const router = Router();
 
@@ -20,9 +21,12 @@ router.post("/signup", async (req: Request, res: Response) => {
     } catch (err: any) {
         return res.status(400).send({error: `${err.message}`});
     }
-    // TODO: validation passed, check if in DB and store if not
     password = await bcrypt.hash(password, 10);
+    const user = await userData.getUserByEmail(email);
+    if (user) return res.status(400).send({error: "Email already exists"});
+    const id = await userData.addUser(email, first_name, last_name, password);
     // save to session
+    req.session._id = id;
     req.session.first_name = first_name;
     req.session.last_name = last_name;
     req.session.email = email;
@@ -38,12 +42,14 @@ router.post("/signin", async (req: Request, res: Response) => {
     } catch (err: any) {
         return res.status(400).send({error: `${err.message}`});
     }
-    // TODO: check against DB
-    // ...
-    let user: User; // retrieved from DB
+    const user = await userData.getUserByEmail(email);
+    if (!user) return res.status(400).send({error: "Email or password invalid"});
+    const result = await bcrypt.compare(password, user.password);
+    if (!result) return res.status(400).send({error: "Email or password invalid"});
     // save to session
-    // req.session.first_name = user.first_name; // TODO: uncomment when user is actually fetched
-    // req.session.last_name = user.last_name; // TODO: uncomment when user is actually fetched
+    req.session._id = user._id;
+    req.session.first_name = user.first_name;
+    req.session.last_name = user.last_name;
     req.session.email = email;
     res.send({status: "signed in"});
 });
