@@ -1,5 +1,6 @@
 import { MongoClient, Db } from "mongodb";
-import { mongoConfig } from "./mongoSettings.js";
+import { mongoConfig } from "./mongoSettings.ts";
+import {InternalServerError} from "../../../common/errors.ts"
 
 // Type variables as either the object or undefined
 let _connection: MongoClient | undefined = undefined;
@@ -12,7 +13,7 @@ const dbConnection = async (): Promise<Db> => {
   }
 
   if (!_db) {
-    throw new Error("Database not initialized");
+    throw new InternalServerError("Database not initialized");
   }
 
   return _db;
