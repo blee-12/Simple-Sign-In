@@ -9,6 +9,15 @@ import cors from "cors";
 import { ObjectId } from 'mongodb';
 import { CLIENT_URL } from "./config/staticAssets";
 
+// types
+
+export interface EventState {
+  id: string;
+  name: string;
+  currentCode: string;
+  intervalId: NodeJS.Timeout;
+}
+
 const app = express();
 const httpServer = createServer(app);
 app.use(express.json());
