@@ -12,7 +12,7 @@ import {
 } from "../../../common/validation";
 import { userData } from '../data';
 import { asyncRoute, requireAuth } from "./utils";
-import { BadInputError } from "../../../common/errors";
+import { BadInputError, NotFoundError } from "../../../common/errors";
 
 const router = Router();
 
@@ -25,8 +25,15 @@ router.post("/signup", asyncRoute (
     let password = validatePassword(req.body.password);
 
     password = await bcrypt.hash(password, 10);
-    const user = await userData.getUserByEmail(email);
-    if (user) throw new BadInputError("Email already in use");
+
+    let user;
+    try { user = await userData.getUserByEmail(email); } 
+    catch (e) {
+      // 404 is good
+      if (!(e instanceof NotFoundError)) {
+        throw e;
+      }
+    }
     const newUser = await userData.addUser(email, first_name, last_name, password);
     
     // save to session
