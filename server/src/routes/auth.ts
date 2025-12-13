@@ -2,10 +2,15 @@
 // POST /signin
 // GET /signout
 
-import bcrypt from 'bcryptjs';
-import { Request, Response, Router } from 'express';
-import { validateFirstName, validateLastName, validateEmail, validatePassword } from '../../../common/validation';
-import { User } from '../config/mongoCollections';
+import bcrypt from "bcryptjs";
+import { Request, Response, Router } from "express";
+import {
+  validateFirstName,
+  validateLastName,
+  validateEmail,
+  validatePassword,
+} from "../../../common/validation";
+import { User } from "../config/mongoCollections";
 import { userData } from '../data';
 
 const router = Router();
@@ -55,13 +60,13 @@ router.post("/signin", async (req: Request, res: Response) => {
 });
 
 router.get("/signout", async (req: Request, res: Response) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error(`Error destroying session: ${err}`);
-            return res.status(500).send({error: "Error signing out"});
-        }
-        return res.send({status: "signed out"});
-    });
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(`Error destroying session: ${err}`);
+      return res.status(500).send({ error: "Error signing out" });
+    }
+    return res.send({ status: "signed out" });
+  });
 });
 
 export default router;

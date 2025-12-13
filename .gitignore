@@ -48,6 +48,9 @@ jspm_packages/
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
+#Ignore package-lock.json
+package-lock.json
+
 # TypeScript cache
 *.tsbuildinfo
 
