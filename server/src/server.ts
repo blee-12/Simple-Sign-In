@@ -8,13 +8,14 @@ import cors from "cors";
 import { ObjectId } from 'mongodb';
 import { CLIENT_URL } from "./config/staticAssets";
 import { ClientToServerEvents, ServerToClientEvents } from "../../common/socketTypes.ts";
+import { eventData } from "./data/index.ts";
 
 // types
 interface EventState {
   id: string;
   name: string;
-  currentCode: string; // deal with code bs later tbh.
-  intervalId: NodeJS.Timeout; 
+  // currentCode: string; // deal with code bs later tbh.
+  // intervalId: NodeJS.Timeout; 
 }
 
 declare module "express-session" {
@@ -33,6 +34,7 @@ declare module "http" {
     }                                                        
   }
 
+// express
 const app = express();
 const httpServer = createServer(app);
 app.use(express.json());
@@ -57,6 +59,64 @@ configRoutes(app);
 
 /* ~~ SOCKET.IO SECTION ~~ */
 
+// to store active events
+const activeEvents = new Map<string, EventState>();
+
+// syncronizing active events
+const BUFFER_MINUTES = 15; // 15 minute buffer to label events as "active"
+const SYNC_INTERVAL_MS = 60 * 1000; // sync this every minute.
+
+// get the window of time in which events are "active"
+function getActiveWindow() {
+  const now = new Date();
+  const buffer = BUFFER_MINUTES * 60 * 1000;
+
+  return {
+    startLimit: new Date(now.getTime() + buffer), 
+    endLimit: new Date(now.getTime() - buffer)
+  }
+}
+
+async function syncActiveEvents() {
+    const window = getActiveWindow();
+
+    // fetch all the active events.
+    const DBactiveEvents = await eventData.getEventsInWindow(window.startLimit, window.endLimit);
+
+    const activeEventIds = new Set(DBactiveEvents.map( event => event._id.toString() ));
+    
+    // adding new active events
+    for (const eventDoc of DBactiveEvents){
+        const id = eventDoc._id.toString();
+
+        // if an ative event isn't already marked as such...
+        if (!activeEvents.has(id)) {
+            console.log(`Starting event: ${eventDoc.name}`);
+
+            // set it to be active.
+            activeEvents.set(id, {
+                id,
+                name: eventDoc.name
+            })
+        }
+    }
+
+    // removing the finished events.
+    for (const [mapId, mapState] of activeEvents) {
+            // If it's in our Map in the list from mongo, its done
+            if (!activeEventIds.has(mapId)) {
+                console.log(`Ending event: ${mapState.name}`);
+
+                // clear the timers here.
+
+                io.to(`${mapId}_chat`).emit("error", "This event has ended.");
+                io.in(`${mapId}_chat`).socketsLeave(`${mapId}_chat`);
+
+                activeEvents.delete(mapId);
+            }
+        }
+}
+
 const io = new Server <ClientToServerEvents, ServerToClientEvents> (httpServer, {
     cors: {
         origin: "http://localhost:5173", // need to replace with front end url eventually.
@@ -64,11 +124,7 @@ const io = new Server <ClientToServerEvents, ServerToClientEvents> (httpServer, 
     }
 });
 io.engine.use(sessionMiddleware);
-io.engine.use(cors());
 
-// to store active events
-// this will need syncronization
-const activeEvents = new Map<string, EventState>();
 
 io.on("connection", (socket) => {
   console.log("socket connection received");
@@ -76,7 +132,9 @@ io.on("connection", (socket) => {
   
   // make sure that the user is signed in.
   if (!req.session || !req.session._id) {
-    console.log("Unauthenticated, disconnecting.")
+    console.log("Unauthenticated, disconnecting.");
+    socket.disconnect();
+    return;
   }
 
   // handle check in
@@ -106,9 +164,6 @@ io.on("connection", (socket) => {
         socket.emit("error", "You must join the event before sending a message!");
     }
   });
-
-  // TODO: remove when we actually do something with the socket
-  socket.disconnect();
 });
 
 // fallback error handler
@@ -120,8 +175,10 @@ app.use(async (err: any, req: Request, res: Response, next: any) => {
   return res.status(500).send({ error: "Internal server error" });
 });
 
-httpServer.listen(4000, () => {
+httpServer.listen(4000, async () => {
   console.log("Express server has started!");
+  await syncActiveEvents();
+  setInterval(() => syncActiveEvents(), SYNC_INTERVAL_MS);
 });
 
 export const simpleSignInServer = app;
