@@ -26,16 +26,20 @@ router.post("/signup", async (req: Request, res: Response) => {
     } catch (err: any) {
         return res.status(400).send({error: `${err.message}`});
     }
-    password = await bcrypt.hash(password, 10);
-    const user = await userData.getUserByEmail(email);
-    if (user) return res.status(400).send({error: "Email already exists"});
-    const id = await userData.addUser(email, first_name, last_name, password);
-    // save to session
-    req.session._id = id;
-    req.session.first_name = first_name;
-    req.session.last_name = last_name;
-    req.session.email = email;
-    res.send({message: "registered & signed in"});
+
+    try {
+        password = await bcrypt.hash(password, 10);
+        const user = await userData.addUser(email, first_name, last_name, password);
+        // save to session
+        req.session._id = user._id;
+        req.session.first_name = user.first_name;
+        req.session.last_name = user.last_name;
+        req.session.email = user.email;
+        res.send({message: "registered & signed in"});
+    } catch (err: any) {
+      return res.status(400).send({error: `${err.message}`});
+    }
+   
 });
 
 router.post("/signin", async (req: Request, res: Response) => {
