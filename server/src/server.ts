@@ -76,8 +76,8 @@ function getActiveWindow() {
   const buffer = BUFFER_MINUTES * 60 * 1000;
   
   return {
-    startLimit: new Date(now.getTime() + buffer), 
-    endLimit: new Date(now.getTime() - buffer)
+    startLimit: new Date(now.getTime() - buffer), 
+    endLimit: new Date(now.getTime() + buffer)
   }
 }
 
