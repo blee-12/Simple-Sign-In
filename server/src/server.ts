@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import configRoutes from "./routes/index";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import { HttpError } from '../../common/errors';
 import session from "express-session";
 import cors from "cors";
 import { ObjectId } from 'mongodb';
@@ -38,7 +39,7 @@ app.use(sessionMiddleware);
 
 declare module "express-session" {
   interface SessionData {
-    _id: ObjectId;
+    _id: string;
     first_name: string;
     last_name: string;
     email: string;
@@ -67,13 +68,13 @@ io.on("connection", (socket) => {
 });
 
 // fallback error handler
-app.use(async (err: any, req: Request, res: Response, next: any) => {
-  if (err.statusCode < 500)
-    return res.status(err.statusCode).send({ error: err.message });
-  console.error("Unhandled server error:");
-  console.error(err);
-  return res.status(500).send({ error: "Internal server error" });
-});
+// app.use((err: any, req: Request, res: Response, next: any) => {
+//     if (err.statusCode < 500 || err instanceof HttpError)
+//         return res.status(err.statusCode).send({error: err.message});
+//     console.error("Unhandled server error:");
+//     console.error(err);
+//     return res.status(500).send({error: "Internal server error"});
+// });
 
 httpServer.listen(4000, () => {
   console.log("Express server has started!");

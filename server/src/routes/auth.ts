@@ -3,70 +3,78 @@
 // GET /signout
 
 import bcrypt from "bcryptjs";
-import { Request, Response, Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import {
   validateFirstName,
   validateLastName,
   validateEmail,
   validatePassword,
 } from "../../../common/validation";
-import { User } from "../config/mongoCollections";
 import { userData } from '../data';
+import { asyncRoute, requireAuth } from "./utils";
+import { BadInputError, NotFoundError } from "../../../common/errors";
 
 const router = Router();
 
-router.post("/signup", async (req: Request, res: Response) => {
-    let first_name, last_name, email, password;
-    try {
-        if (!req.body) throw new Error("No body provided");
-        first_name = validateFirstName(req.body.first_name);
-        last_name = validateLastName(req.body.last_name);
-        email = validateEmail(req.body.email);
-        password = validatePassword(req.body.password);
-    } catch (err: any) {
-        return res.status(400).send({error: `${err.message}`});
-    }
+router.post("/signup", asyncRoute (
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.body) throw new BadInputError("No body provided");
+    let first_name = validateFirstName(req.body.first_name);
+    let last_name = validateLastName(req.body.last_name);
+    let email = validateEmail(req.body.email);
+    let password = validatePassword(req.body.password);
+
     password = await bcrypt.hash(password, 10);
-    const user = await userData.getUserByEmail(email);
-    if (user) return res.status(400).send({error: "Email already exists"});
-    const id = await userData.addUser(email, first_name, last_name, password);
+
+    let user;
+    try { user = await userData.getUserByEmail(email); } 
+    catch (e) {
+      // 404 is good
+      if (!(e instanceof NotFoundError)) {
+        throw e;
+      }
+    }
+    const newUser = await userData.addUser(email, first_name, last_name, password);
+    
     // save to session
-    req.session._id = id;
+    req.session._id = newUser._id.toHexString();
     req.session.first_name = first_name;
     req.session.last_name = last_name;
     req.session.email = email;
     res.send({message: "registered & signed in"});
-});
+  }
+));
 
-router.post("/signin", async (req: Request, res: Response) => {
-    let email, password;
-    try {
-        if (!req.body) throw new Error("No body provided");
-        email = validateEmail(req.body.email);
-        password = req.body.password;
-    } catch (err: any) {
-        return res.status(400).send({error: `${err.message}`});
-    }
+router.post("/signin", asyncRoute (
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (!req.body) throw new BadInputError("No body provided");
+    let email = validateEmail(req.body.email);
+    let password = req.body.password;
+
     const user = await userData.getUserByEmail(email);
-    if (!user) return res.status(400).send({error: "Email or password invalid"});
+    if (!user) throw new BadInputError("Email or password invalid");
     const result = await bcrypt.compare(password, user.password);
-    if (!result) return res.status(400).send({error: "Email or password invalid"});
+    if (!result) throw new BadInputError("Email or password invalid");
+
     // save to session
-    req.session._id = user._id;
+    req.session._id = user._id.toHexString();
     req.session.first_name = user.first_name;
     req.session.last_name = user.last_name;
     req.session.email = email;
     res.send({status: "signed in"});
-});
+  }
+));
 
-router.get("/signout", async (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      console.error(`Error destroying session: ${err}`);
-      return res.status(500).send({ error: "Error signing out" });
-    }
-    return res.send({ status: "signed out" });
-  });
-});
+router.get("/signout", requireAuth, asyncRoute (
+  async (req: Request, res: Response, next: NextFunction) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error(`Error destroying session: ${err}`);
+        return res.status(500).send({ error: "Error signing out" });
+      }
+      return res.send({ status: "signed out" });
+    });
+  }
+));
 
 export default router;
