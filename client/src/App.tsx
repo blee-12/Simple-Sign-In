@@ -3,17 +3,20 @@ import "./App.css";
 import { SignUp } from "./components/auth/SignUp";
 import { LogIn } from "./components/auth/LogIn";
 import Navbar from "./components/Navbar";
+import { ContextWrapper } from "./components/ContextWrapper";
 
 function App() {
   return (
-    <>
-    {/* TODO replace false with session auth context */}
-    <Navbar isAuthenticated={false} />
-      <Routes>
-        <Route path="/signup" element={<SignUp />}></Route>
-        <Route path="/login" element={<LogIn />}></Route>
-      </Routes>
-    </>
+    <ContextWrapper>
+      <>
+        {/* TODO replace false with session auth context */}
+        <Navbar />
+        <Routes>
+          <Route path="/signup" element={<SignUp />}></Route>
+          <Route path="/login" element={<LogIn />}></Route>
+        </Routes>
+      </>
+    </ContextWrapper>
   );
 }
 
