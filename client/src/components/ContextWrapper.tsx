@@ -21,17 +21,20 @@ export const ContextWrapper = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<authStateType>(null);
 
   async function getLoginState() {
-    const res = await fetch(`${WEBSITE_URL}/profile`);
+    const res = await fetch(`${WEBSITE_URL}/profile`, {
+      credentials: "include",
+    });
     if (!res.ok) {
       setAuthState(null);
       return;
     }
     if (res.ok) {
+      const resJson = await res.json();
+      if (resJson.data.first_name) setAuthState("FullUser");
       //TODO: check response to determine type of user
     }
   }
 
-  console.log("theme", theme);
 
   //Whenever theme state changes, useEffect run to save changes to localStorage
   useEffect(() => {

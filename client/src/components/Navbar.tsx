@@ -6,6 +6,7 @@ export default function Navigation() {
   const { authState } = useGetContext();
 
   //check authState to verify that the user is authenticated
+  console.log(authState);
   const isAuthenticated = authState === "FullUser" || authState === "EmailOnly";
 
   return (

@@ -40,9 +40,12 @@ export function Profile() {
       try {
         const res = await fetch(`${WEBSITE_URL}/profile`, {
           method: "GET",
+          credentials: "include",
         });
         if (!res.ok) throw new Error("Failed to load profile");
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.data;
+        console.log("Profile Data", data);
         setFormData((prev) => ({
           ...prev,
           firstName: data.first_name || "",

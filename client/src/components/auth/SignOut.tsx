@@ -14,7 +14,7 @@ export default function SignOut() {
   async function handleSignout() {
     try {
       const res = await fetch(`${WEBSITE_URL}/signout`, {
-        method: "POST",
+        method: "GET",
         credentials: "include",
       });
       if (!res.ok) {
