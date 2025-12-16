@@ -6,7 +6,7 @@ import { dbConnection } from "./mongoConnection.ts";
 
 // SignIn object
 export interface SignIn {
-  userID: User["_id"];
+  userID: User["email"];
   timestamp: Date;
 }
 

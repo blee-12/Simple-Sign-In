@@ -140,34 +140,32 @@ let exportedMethods = {
     async registerUser(eventId: string, userID: string | null, email: string | null){
       eventId = validateStrAsObjectId(eventId);
 
-      let user: User | null = null;
-      if (email) {
-        user = await userData.getUserByEmail(email); 
-      } else if (userID) {
-        user = await userData.getUserByID(userID);
-      } 
-
-      if (!user) throw new BadInputError("Must provide an email or userID to register a user")
+      if (email == null) {
+        if (userID) {
+          const user = await userData.getUserByID(userID);
+          email = user.email;
+        }
+        else throw new BadInputError("Must provide an email or userID to register a user");
+      }
       
       const eventCollection = await events();
-      const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { attending_users: user.email }});
+      const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { attending_users: email }});
       if (!event) throw new NotFoundError("Couldn't add user to event!");
     },
 
     async checkInUser(eventId:string, userID: string | null, email: string | null){
       eventId = validateStrAsObjectId(eventId);
 
-      let user: User | null = null;
-      if (email) {
-        user = await userData.getUserByEmail(email); 
-      } else if (userID) {
-        user = await userData.getUserByID(userID);
-      } 
-
-      if (!user) throw new BadInputError("Must provide an email or userID to sign a user in!");
+      if (email == null) {
+        if (userID) {
+          const user = await userData.getUserByID(userID);
+          email = user.email;
+        }
+        else throw new BadInputError("Must provide an email or userID to register a user");
+      }
 
       let signin: SignIn = {
-        userID: user._id,
+        userID: email,
         timestamp: new Date(),
       }
 
@@ -179,7 +177,7 @@ let exportedMethods = {
       // for now, im just going to try to register the user if they are not already.
 
       try {
-        await this.registerUser(eventId, user._id.toString(), null)
+        await this.registerUser(eventId, userID, email)
       } catch (_) {
         // do nothing lol.
       }
