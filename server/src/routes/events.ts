@@ -10,6 +10,7 @@ import events from '../data/events'
 import * as val from '../../../common/validation';
 import { BadInputError } from '../../../common/errors';
 import { asyncRoute, requireAuth } from './utils';
+import { checkAndActivateEvent } from '../server';
 const router = Router()
 
 // POST and GET : Fetch all and create
@@ -21,14 +22,17 @@ router.get('/', requireAuth, asyncRoute (
 ));
 router.post('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
-        let { name, time_start, time_end } = req.body  // user inputs
+        let { name, time_start, time_end } = req.body 
         if (!name || !time_start || !time_end)
             throw new BadInputError("All fields must be provided")
         name = val.validateAndTrimString(name, "Event Name", 5, 100)
-        val.validateStartEndDates(time_start, time_end);
-
+        const start = new Date(time_start);
+        const end = new Date(time_end);
+        val.validateStartEndDates(start, end);
+        
         const created_by = req.session._id || ""
-        const event = await events.createEvent(created_by, name, time_start, time_end)
+        const event = await events.createEvent(created_by.toString(), name, start, end);
+        checkAndActivateEvent(event);
         res.status(201).json({ data: event });
     }
 ));
