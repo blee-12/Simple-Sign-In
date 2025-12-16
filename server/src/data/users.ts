@@ -62,7 +62,7 @@ let exportedMethods = {
     return user;
   },
 
-  async editUser(email: string, first_name: string | null, last_name: string | null) {
+  async editUser(email: string, first_name: string | null, last_name: string | null, password: string | null) {
     // first get the user
     let user = await this.getUserByEmail(email);
     let modified = false;
@@ -80,6 +80,12 @@ let exportedMethods = {
       modified = true;
     }
 
+    if (password) {
+      password = validatePassword(password);
+      user.password = password;
+      modified = true;
+    }
+
     if (!modified){
       throw new BadInputError("Must change provide more than just an email argument!");
     }
@@ -89,7 +95,8 @@ let exportedMethods = {
       { $set: 
         { 
           first_name: user.first_name, 
-          last_name: user.last_name 
+          last_name: user.last_name,
+          password: user.password
         }
       }
     );
