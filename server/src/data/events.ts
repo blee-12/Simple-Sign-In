@@ -32,10 +32,12 @@ let exportedMethods = {
       return event;
     },
 
-    async createEvent(created_by: string, name: string, time_start: Date, time_end: Date, requires_code: boolean, attendeeEmails: string[]) {
+    async createEvent(created_by: string, name: string, time_start: Date, time_end: Date, requires_code: boolean, attendeeEmails: string[], description: string) {
       created_by = validateStrAsObjectId(created_by);
 
       name = validateAndTrimString(name, "Event Name", 5, 100);
+
+      description = validateAndTrimString(description, "Event Description", 5, 200);
 
       validateStartEndDates(time_start, time_end);
 
@@ -48,7 +50,8 @@ let exportedMethods = {
         attending_users: attendeeEmails,
         checked_in_users: [],
         requires_code,
-        code: null
+        code: null,
+        description
       }
 
       const eventCollection = await events();
@@ -75,7 +78,7 @@ let exportedMethods = {
       return ret;
     },
 
-    async editEvent(id: string, name: string | null, time_start: Date | null, time_end: Date | null){
+    async editEvent(id: string, name: string | null, time_start: Date | null, time_end: Date | null, description: string | null){
       id = validateStrAsObjectId(id);
 
       let event: Event = await this.getEventByID(id);
@@ -85,7 +88,8 @@ let exportedMethods = {
 
       if (name) {
         name = validateAndTrimString(name, "Event Name", 5, 100);
-        isEventNameInUse(name);
+
+        //isEventNameInUse(name);
         event.name = name;
         modified = true;
       } 
@@ -95,13 +99,20 @@ let exportedMethods = {
         event.time_start = time_start;
         event.time_end = time_end;
         modified = true;
-      } else if (time_start) {
+      }  
+      if (time_start) {
         validateStartEndDates(time_start, event.time_end);
         event.time_start = time_start;
         modified = true;
-      } else if (time_end) {
+      }  
+      if (time_end) {
         validateStartEndDates(event.time_start, time_end);
         event.time_end = time_end;
+        modified = true;
+      }  
+      if (description) {
+        description = validateAndTrimString(description, "Event Description", 5, 200);
+        event.description = description;
         modified = true;
       }
 
@@ -116,6 +127,7 @@ let exportedMethods = {
             name: event.name, 
             time_start: event.time_start,
             time_end: event.time_end,
+            description: event.description,
           }
         }
       );
