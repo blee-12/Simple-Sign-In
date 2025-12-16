@@ -7,6 +7,7 @@ import { CheckInForm } from "./CheckInForm";
 import { StudentList } from "./StudentList";
 import { type ClientToServerEvents, type ServerToClientEvents } from "../../../common/socketTypes";
 import { Notification } from "./UI/Notification";
+import { NonActiveEvent } from "./NonActiveEvent";
 
 type EventSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -19,10 +20,10 @@ interface EventDataState {
 }
 
 export const EventPage = () => {
-  const { id } = useParams<{ id: string }>(); 
+  const { id = "" } = useParams(); 
   const [socket, setSocket] = useState<EventSocket | null>(null);
   
-  const [viewMode, setViewMode] = useState<"loading" | "creator" | "student_lobby" | "student_chat">("loading");
+  const [viewMode, setViewMode] = useState<"loading" | "creator" | "student_lobby" | "student_chat" | "not_active">("loading");
   const [userEmail, setUserEmail] = useState<string>(""); 
 
   const [eventDetails, setEventDetails] = useState<EventDataState | null>(null);
@@ -74,6 +75,13 @@ export const EventPage = () => {
     });
 
     setSocket(newSocket);
+
+    // check if the event is active.
+    newSocket.on("not_active", () => {
+      setViewMode("not_active");
+    })
+
+    newSocket.emit("is_active", id);
 
     // wait for a successful join!
     newSocket.on("success_join", () => {
@@ -129,6 +137,7 @@ export const EventPage = () => {
                         <StudentList 
                             attendingUsers={eventDetails.attending_users || []}
                             checkedInUsers={eventDetails.checked_in_users || []}
+                            eventId={id}
                         />
                     )}
 
@@ -152,6 +161,10 @@ export const EventPage = () => {
                 <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">Live Chat</h2>
                 <ChatBox socket={socket} eventId={id!} userEmail={userEmail} />
             </div>
+        )}
+
+        {viewMode === "not_active" && eventDetails && (
+          <NonActiveEvent eventName={eventDetails.name}/>
         )}
       </div>
     </div>
