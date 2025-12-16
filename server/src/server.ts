@@ -18,7 +18,7 @@ const env_vars = [
   "EMAIL_API_KEY",
   "EMAIL_ADDRESS",
   "CLIENT_URL",
-  "SERVER_URL",
+  "VITE_SERVER_URL",
   "MONGODB_URI"
 ]
 for (const ev of env_vars)
