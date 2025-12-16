@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  validateCode,
   validateEmail,
   validateFirstName,
   validateLastName,
@@ -88,6 +89,12 @@ export function SignUp() {
       newErrors.push("Verification code must be 6 digits!");
     }
 
+    try {
+      validateCode(formData.code.trim(), 6);
+    } catch (err) {
+      newErrors.push(err instanceof Error ? err.message : "Invalid Code");
+    }
+
     setErrors(newErrors);
 
     if (newErrors.length === 0) {
@@ -101,7 +108,7 @@ export function SignUp() {
             last_name,
             email,
             password,
-            code: formData.code,
+            code: formData.code.trim(),
           }),
           credentials: "include",
         });

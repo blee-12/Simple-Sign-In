@@ -7,6 +7,7 @@ import {
 import { useGetContext, validationWrapper } from "../lib/helper";
 import { WEBSITE_URL } from "../lib/assets";
 import { BlurCard } from "./BlurCard";
+import { RequireFullUser } from "../lib/RequireFullUser";
 
 type ThemeColors = "blue" | "purple" | "green" | "red" | "orange" | "yellow";
 
@@ -22,6 +23,10 @@ const themeColorClasses: Record<ThemeColors, string> = {
 export function Profile() {
   const context = useGetContext();
   const { setTheme, theme } = context;
+
+  RequireFullUser({
+    message: "You must have an account to view your profile",
+  });
 
   const [formData, setFormData] = useState({
     firstName: "",

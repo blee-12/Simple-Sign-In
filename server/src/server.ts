@@ -45,6 +45,7 @@ declare module "express-session" {
     last_name: string;
     email: string;
     password: string;
+    temporary: boolean;
   }
 }
 

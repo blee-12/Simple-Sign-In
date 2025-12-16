@@ -32,7 +32,7 @@ let exportedMethods = {
       return event;
     },
 
-    async createEvent(created_by: string, name: string, time_start: Date, time_end: Date, requires_code: boolean) {
+    async createEvent(created_by: string, name: string, time_start: Date, time_end: Date, requires_code: boolean, attendeeEmails: string[]) {
       created_by = validateStrAsObjectId(created_by);
 
       name = validateAndTrimString(name, "Event Name", 5, 100);
@@ -45,7 +45,7 @@ let exportedMethods = {
         time_start,
         time_end, 
         created_by: new ObjectId(created_by),
-        attending_users: [],
+        attending_users: attendeeEmails,
         checked_in_users: [],
         requires_code,
         code: null
