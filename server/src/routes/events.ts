@@ -178,7 +178,7 @@ router.post('/:id/email', requireAuth, asyncRoute (
             const results = await Promise.all(newTokens.map(async (token) => await sendEmail(
                 token.email,
                 `Join your event "${event.name}" now!`,
-                `Click here to join the event: ${process.env.CLIENT_URL}:/event/join/${token._id.toHexString()}`
+                `Click here to join the event: ${process.env.CLIENT_URL}/event/join/${token._id.toHexString()}`
             )));
         } catch (err: any) {
             console.error(`Email error: ${err.message}`);
