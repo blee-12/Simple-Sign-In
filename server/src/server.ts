@@ -10,6 +10,8 @@ import { CLIENT_URL } from "./config/staticAssets";
 import { ClientToServerEvents, ServerToClientEvents } from "../../common/socketTypes.ts";
 import { eventData } from "./data/index.ts";
 
+const API_PORT = 4000;
+
 // types
 interface EventState {
   id: string;
@@ -138,11 +140,13 @@ async function syncActiveEvents() {
                 
                 // leave the rooms
                 io.in(`${mapId}_chat`).socketsLeave(`${mapId}_chat`);
-                io.in(`${mapId}_creator`).socketsLeave(`${mapId}_admin`);
+                io.in(`${mapId}_creator`).socketsLeave(`${mapId}_creator`);
 
                 activeEvents.delete(mapId);
             }
         }
+
+    console.log(activeEventIds);
 }
 
 const io = new Server <ClientToServerEvents, ServerToClientEvents> (httpServer, {
@@ -184,7 +188,7 @@ io.on("connection", (socket) => {
 
     socket.emit("success_join");
 
-    io.to('${eventId}_creator').emit("student_checked_in", req.session.email);
+    io.to(`${eventId}_creator`).emit("student_checked_in", req.session.email);
 
     // TODO: if the student isn't registered for the event, then handle that.
 
@@ -227,7 +231,7 @@ app.use(async (err: any, req: Request, res: Response, next: any) => {
   return res.status(500).send({ error: "Internal server error" });
 });
 
-httpServer.listen(4000, async () => {
+httpServer.listen(API_PORT, async () => {
   console.log("Express server has started!");
   await syncActiveEvents();
   setInterval(() => syncActiveEvents(), SYNC_INTERVAL_MS);
