@@ -1,8 +1,8 @@
 import { ObjectId, Collection } from "mongodb";
-import { users } from "../config/mongoCollections.ts";
-import type { User } from "../config/mongoCollections.ts";
+import { unverifiedUsers, users } from "../config/mongoCollections.ts";
+import type { UnverifiedUser, User } from "../config/mongoCollections.ts";
 import { BadInputError, NotFoundError, InternalServerError} from "../../../common/errors.ts";
-import { validateEmail, validateFirstName, validateLastName, validatePassword, validateStrAsObjectId } from "../../../common/validation.ts"; 
+import { validateAndTrimString, validateEmail, validateFirstName, validateLastName, validatePassword, validateStrAsObjectId } from "../../../common/validation.ts"; 
 
 // helper function, checks if the email is in use:
 async function emailInUse(email: string): Promise<Boolean> { 
@@ -124,6 +124,39 @@ let exportedMethods = {
     if (!added) throw new InternalServerError(`Could not add user ${email}!`);
 
     return user;
+  },
+
+  async createUnverifiedUser(email: string) {
+    email = validateEmail(email);
+    await emailInUse(email);
+
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const unverifiedUserCollection = await unverifiedUsers();
+    
+    const unverifiedUser: UnverifiedUser = {
+      email,
+      code
+    }
+    const result = await unverifiedUserCollection.updateOne({ email: email }, { $set: unverifiedUser }, { upsert: true });
+    if (!result.acknowledged) throw new InternalServerError("Unable to create unverified user");
+    return unverifiedUser;
+  },
+
+  async verifyUserCode(email: string, code: string) {
+    email = validateEmail(email);
+    code = validateAndTrimString(code, "Code", 6, 6);
+    const unverifiedUserCollection = await unverifiedUsers();
+    const result = await unverifiedUserCollection.findOne({ email: email, code: code });
+    if (!result) throw new NotFoundError("Email or code not found");
+  },
+
+  async deleteUnverifiedUser(email: string) {
+    email = validateEmail(email);
+    const unverifiedUserCollection = await unverifiedUsers();
+    const result = await unverifiedUserCollection.deleteOne({ email: email });
+    // don't return an error as this isn't really a problem
+    if (!result.acknowledged) console.error(`Unable to delete unverified user ${email}`);
   }
 };
 
