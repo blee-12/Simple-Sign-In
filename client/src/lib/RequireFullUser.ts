@@ -8,9 +8,13 @@ export function useRequireFullUser(message: string) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (authState !== "FullUser") {
+    if (authState !== "FullUser" && authState !== "loading") {
       const encodedMessage = encodeURIComponent(message);
-      navigate(`/login?message=${encodedMessage}`);
+      //delay until website can load profile/account info before navigating
+      setTimeout(() => {
+        if (authState === null || authState === "EmailOnly")
+          navigate(`/login?message=${encodedMessage}`);
+      }, 1500);
     }
   }, [authState, message, navigate]);
 }

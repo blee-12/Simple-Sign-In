@@ -6,4 +6,4 @@ export type ThemeColors =
   | "orange"
   | "yellow";
 
-export type authStateType = null | "FullUser" | "EmailOnly";
+export type authStateType = null | "FullUser" | "EmailOnly" | "loading";
