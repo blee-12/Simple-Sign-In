@@ -8,9 +8,9 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import events from '../data/events'
 import * as val from '../../../common/validation';
-import { BadInputError } from '../../../common/errors';
+import { BadInputError, UnauthenticatedError } from '../../../common/errors';
 import { asyncRoute, requireAuth, sendEmail } from './utils';
-import { tokenData } from '../data';
+import { tokenData, userData } from '../data';
 import { CLIENT_URL } from '../config/staticAssets';
 const router = Router()
 
@@ -38,11 +38,70 @@ router.post('/', requireAuth, asyncRoute (
 ));
 
 // GET join/:randomToken
-router.post('/join/:randomToken', asyncRoute (
-    //TODO
+router.get('/join/:randomToken', asyncRoute (
     async (req: Request, res: Response, next: NextFunction) => {
-        const { randomToken } = req.params
-        res.status(200).json({ message: `Used ${randomToken} to join event` });
+        const { randomToken } = req.params;
+        val.validateStrAsObjectId(randomToken);
+        const token = await tokenData.getTokenByID(randomToken);
+        const event = await events.getEventByID(token.event.toHexString());
+        const creator = await userData.getUserByID(event.created_by.toHexString());
+
+        const data = {
+            _id: event._id,
+            name: event.name,
+            time_start: event.time_start,
+            time_end: event.time_end,
+            requires_code: event.requires_code,
+            created_by: creator.email
+        }
+
+        res.status(200).json(data);
+    }
+));
+// POST join/:randomToken
+router.post('/join/:randomToken', asyncRoute (
+    async (req: Request, res: Response, next: NextFunction) => {
+        const { randomToken } = req.params;
+        const code = req.body?.code;
+        val.validateStrAsObjectId(randomToken);
+        const token = await tokenData.getTokenByID(randomToken);
+        const event = await events.getEventByID(token.event.toHexString());
+        const creator = await userData.getUserByID(event.created_by.toHexString());
+
+        if (event.requires_code) {
+            if (!code) throw new UnauthenticatedError("This event requires a code");
+            // TODO: check code against current event code
+        }
+
+        // check in
+        await events.checkInUser(event._id.toHexString(), null, token.email);
+
+        try {
+            const user = await userData.getUserByEmail(token.email);
+            req.session._id = user._id.toHexString();
+            req.session.first_name = user.first_name;
+            req.session.last_name = user.last_name;
+            req.session.email = user.email;
+        } catch (_) {
+            // no account associated with email
+            req.session._id = token._id.toHexString();
+            req.session.email = token.email;
+            req.session.temporary = true;
+        }
+
+        
+        const updatedEvent = await events.getEventByID(token.event.toHexString());
+        const data = {
+            _id: event._id,
+            name: event.name,
+            time_start: event.time_start,
+            time_end: event.time_end,
+            requires_code: event.requires_code,
+            created_by: creator.email,
+            checked_in_users: updatedEvent.checked_in_users
+        }
+
+        res.status(200).json(data);
     }
 ));
 

@@ -28,7 +28,8 @@ export interface Event {
   time_end: Date;
   attending_users: User["email"][];
   checked_in_users: SignIn[]; 
-  code: string | null;
+  requires_code: boolean;
+  code?: string | null;
 }
 
 // Token used in join links
