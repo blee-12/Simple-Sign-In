@@ -10,6 +10,7 @@ import type {
   SignIn
 } from "../config/mongoCollections.ts";
 import { ObjectId } from "mongodb";
+import bcrypt from "bcryptjs";
 
 const db = await dbConnection();
 await db.dropDatabase();
@@ -20,13 +21,23 @@ const userCollection = await users();
 const eventCollection = await events();
 
 // create the first user and event:
+const PASSWORD = "EncryptThis123!";
+const hashed_password = await bcrypt.hash(PASSWORD, 10);
 
 let st1: User = {
   _id: new ObjectId(),
   email: "bwoods@stevens.edu",
-  password: "EncryptThis",
+  password: hashed_password, 
   first_name: "Bennett",
   last_name: "Woods",
+};
+
+let st2: User = {
+  _id: new ObjectId(),
+  email: "bennettwoods2004@gmail.com",
+  password: hashed_password, 
+  first_name: "Benit",
+  last_name: "Voods",
 };
 
 let ev1: Event = {
@@ -38,11 +49,12 @@ let ev1: Event = {
   attending_users: [],
   checked_in_users: [],
   code: null,
+  requires_code: true
 };
 
 // create the signIn object for st1
 const signIn1: SignIn = {
-  userID: st1._id,
+  userID: st1._id.toString(),
   timestamp: new Date(),
 };
 
@@ -53,6 +65,7 @@ ev1.checked_in_users.push(signIn1);
 // add the events to the db.
 try {
   await userCollection.insertOne(st1);
+  await userCollection.insertOne(st2);
   await eventCollection.insertOne(ev1);
 } catch (e) {
   // on failure, exit.
