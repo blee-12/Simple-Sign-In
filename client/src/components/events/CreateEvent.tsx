@@ -7,14 +7,20 @@ import {
 import { validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
+import { RequireFullUser } from "../../lib/RequireFullUser";
 
 export default function CreateEvent() {
+  RequireFullUser({
+    message: "You must have an account to create an event",
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     time_start: "",
     time_end: "",
     attendeeEmails: "",
-    requires_code: false, // NEW toggle
+    requires_code: false,
+    desc: "", // NEW field
   });
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -42,10 +48,19 @@ export default function CreateEvent() {
 
     // Validate event name
     try {
-      validateAndTrimString(formData.name, "Event Name", 3, 22);
+      validateAndTrimString(formData.name, "Event Name", 5, 100);
     } catch (err) {
       newErrors.push(err instanceof Error ? err.message : "Invalid Event Name");
     }
+
+    // Validate Event Description
+    try {
+      validateAndTrimString(formData.desc, "Event Description", 5, 200);
+    } catch (err) {
+      newErrors.push(err instanceof Error ? err.message : "Invalid Event Description");
+    }
+
+    
 
     if (!formData.time_start) newErrors.push("Start time is required");
     if (!formData.time_end) newErrors.push("End time is required");
@@ -85,6 +100,7 @@ export default function CreateEvent() {
             time_end: formData.time_end,
             attending_users: emailList,
             requires_code: formData.requires_code,
+            desc: formData.desc.trim(),
           }),
           credentials: "include",
         });
@@ -97,16 +113,6 @@ export default function CreateEvent() {
         const data = await res.json();
         console.log("Event created:", data);
 
-        // Send emails using returned _id
-        if (data.data._id) {
-          await fetch(`${WEBSITE_URL}/events/${data.data._id}/email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ emailList }),
-            credentials: "include",
-          });
-        }
-
         setSuccess(true);
         setFormData({
           name: "",
@@ -114,6 +120,7 @@ export default function CreateEvent() {
           time_end: "",
           attendeeEmails: "",
           requires_code: false,
+          desc: "",
         });
       } catch (err: unknown) {
         setErrors((prev) =>
@@ -177,6 +184,20 @@ export default function CreateEvent() {
           />
         </div>
 
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <textarea
+            name="desc"
+            placeholder="Enter event description"
+            value={formData.desc}
+            onChange={handleChange}
+            rows={4}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
+          />
+        </div>
+
         {/* Tailwind taken from: https://flowbite.com/docs/forms/toggle/ */}
         <label className="w-full inline-flex cursor-pointer p-4 bg-gray-50 border border-gray-300 rounded-lg shadow-sm items-center">
           <input
@@ -186,13 +207,11 @@ export default function CreateEvent() {
             onChange={handleChange}
             className="sr-only peer"
           />
-
           <div
             className="shrink-0 relative w-9 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full 
                   after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all
                   peer-checked:bg-blue-600 peer-checked:after:translate-x-full"
           ></div>
-
           <div className="ml-3 select-none">
             <p className="text-sm font-medium text-gray-900">
               Require 4-digit Code
