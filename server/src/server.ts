@@ -29,6 +29,7 @@ declare module "express-session" {
     last_name: string;
     email: string;
     password: string;
+    temporary: boolean;
   }
 }
 
@@ -83,16 +84,7 @@ function getActiveWindow() {
     startLimit: new Date(now.getTime() - buffer), 
     endLimit: new Date(now.getTime() + buffer)
    }
-}  
-declare module "express-session" {
-  interface SessionData {
-    _id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    password: string;
-    temporary: boolean;
-  }
+} 
 
 async function syncActiveEvents() {
     const window = getActiveWindow();
