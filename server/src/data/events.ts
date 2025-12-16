@@ -165,14 +165,21 @@ let exportedMethods = {
         else throw new BadInputError("Must provide an email or userID to register a user");
       }
 
+      // check if already checked in; do nothing if so
+      const eventCollection = await events();
+      const event = await eventCollection.findOne({ _id: new ObjectId(eventId) });
+      if (!event) throw new NotFoundError("Event not found");
+      if (event.checked_in_users.map(s => s.userID).includes(email))
+        return;
+
+
       let signin: SignIn = {
         userID: email,
         timestamp: new Date(),
       }
 
-      const eventCollection = await events();
-      const event = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { checked_in_users: signin }})
-      if (!event) throw new NotFoundError("Couldn't add user to event!");
+      const updatedEvent = await eventCollection.findOneAndUpdate({ _id: new ObjectId(eventId) }, { $addToSet: { checked_in_users: signin }})
+      if (!updatedEvent) throw new NotFoundError("Couldn't add user to event!");
 
       // could check if the user is registered?
       // for now, im just going to try to register the user if they are not already.
