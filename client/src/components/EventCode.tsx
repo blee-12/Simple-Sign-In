@@ -5,11 +5,12 @@ import { type ClientToServerEvents, type ServerToClientEvents } from '../../../c
 interface AdminDisplayProps {
   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
   eventId: string;
+  onError: (msg: string) => void;
 }
 
-export const EventCode: React.FC<AdminDisplayProps> = ({ socket, eventId }) => {
+export const EventCode: React.FC<AdminDisplayProps> = ({ socket, eventId, onError }) => {
   const [currentCode, setCurrentCode] = useState<string>("----");
-  const [timeLeft, setTimeLeft] = useState<number>(30); // Assuming 30s rotation
+  const [timeLeft, setTimeLeft] = useState<number>(30);
 
   useEffect(() => {
 
@@ -20,7 +21,7 @@ export const EventCode: React.FC<AdminDisplayProps> = ({ socket, eventId }) => {
     
     const handleError = (msg: string) => {
         console.error("Socket Error:", msg);
-        alert(`Server Error: ${msg}`); // Rude but effective for debugging
+        onError(msg);
     };
 
     socket.on("code_update", handleCodeUpdate);
@@ -45,15 +46,12 @@ export const EventCode: React.FC<AdminDisplayProps> = ({ socket, eventId }) => {
         Join Code
       </h2>
 
-      {/* The Code Display */}
       <div className="bg-gray-900 text-white font-mono text-8xl py-8 px-12 rounded-xl tracking-[1rem] shadow-inner mb-6 relative overflow-hidden">
         {currentCode}
         
-        {/* Shine effect (optional flair) */}
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
       </div>
 
-      {/* Progress Bar / Timer */}
       <div className="w-full max-w-xs flex flex-col gap-2">
         <div className="flex justify-between text-xs font-semibold text-gray-400">
           <span>Expires in</span>

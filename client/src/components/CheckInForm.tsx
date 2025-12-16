@@ -5,9 +5,11 @@ import { type ClientToServerEvents, type ServerToClientEvents } from '../../../c
 interface CheckInProps {
   socket: Socket<ServerToClientEvents, ClientToServerEvents>;
   eventId: string;
+  userEmail: string;
+  onError: (msg: string) => void;
 }
 
-export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
+export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId, userEmail, onError }) => {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,14 +31,14 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
     }
 
     const handleError = (msg: string) => {
-      setError(msg);
-      setIsSubmitting(false);
+        console.error("Socket Error:", msg);
+        onError(msg); 
     };
 
     socket.once("error", handleError);
 
     console.log(`Checking into event ${eventId} with code ${code}`);
-    socket.emit("check_in", eventId, code, ""); 
+    socket.emit("check_in", eventId, code, userEmail); 
 
     return () => {
       socket.off("error", handleError);
