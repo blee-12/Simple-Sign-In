@@ -2,19 +2,25 @@ import { useState } from "react";
 import {
   validateAndTrimString,
   validateEmail,
-  validateFirstName,
   validateStartEndDates,
 } from "../../../../common/validation";
 import { validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
+import { RequireFullUser } from "../../lib/RequireFullUser";
 
 export default function CreateEvent() {
+  RequireFullUser({
+    message: "You must have an account to create an event",
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     time_start: "",
     time_end: "",
     attendeeEmails: "",
+    requires_code: false,
+    desc: "", // NEW field
   });
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -23,7 +29,16 @@ export default function CreateEvent() {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const newValue =
+      e.target instanceof HTMLInputElement && e.target.type === "checkbox"
+        ? e.target.checked
+        : value;
+
+    setFormData({
+      ...formData,
+      [name]: newValue,
+    });
     setSuccess(false);
   }
 
@@ -33,19 +48,23 @@ export default function CreateEvent() {
 
     // Validate event name
     try {
-      validateAndTrimString(formData.name, "Event Name", 3, 22);
+      validateAndTrimString(formData.name, "Event Name", 5, 100);
     } catch (err) {
       newErrors.push(err instanceof Error ? err.message : "Invalid Event Name");
     }
 
-    if (!formData.time_start) {
-      newErrors.push("Start time is required");
-    }
-    if (!formData.time_end) {
-      newErrors.push("End time is required");
+    // Validate Event Description
+    try {
+      validateAndTrimString(formData.desc, "Event Description", 5, 200);
+    } catch (err) {
+      newErrors.push(err instanceof Error ? err.message : "Invalid Event Description");
     }
 
-    // Validate times
+    
+
+    if (!formData.time_start) newErrors.push("Start time is required");
+    if (!formData.time_end) newErrors.push("End time is required");
+
     try {
       validateStartEndDates(
         new Date(formData.time_start),
@@ -55,7 +74,6 @@ export default function CreateEvent() {
       newErrors.push(err instanceof Error ? err.message : "Date Input Error");
     }
 
-    // Validate and parse emails
     const emailList = formData.attendeeEmails
       .split(",")
       .map((e) => e.trim())
@@ -75,14 +93,14 @@ export default function CreateEvent() {
       try {
         const res = await fetch(`${WEBSITE_URL}/events`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: formData.name.trim(),
             time_start: formData.time_start,
             time_end: formData.time_end,
             attending_users: emailList,
+            requires_code: formData.requires_code,
+            desc: formData.desc.trim(),
           }),
           credentials: "include",
         });
@@ -94,21 +112,22 @@ export default function CreateEvent() {
 
         const data = await res.json();
         console.log("Event created:", data);
+
         setSuccess(true);
         setFormData({
           name: "",
           time_start: "",
           time_end: "",
           attendeeEmails: "",
+          requires_code: false,
+          desc: "",
         });
       } catch (err: unknown) {
-        setErrors((prev) => {
-          if (err instanceof Error) {
-            return prev.concat(err.message);
-          } else {
-            return prev.concat("Unknown error when creating event. Try again!");
-          }
-        });
+        setErrors((prev) =>
+          err instanceof Error
+            ? prev.concat(err.message)
+            : prev.concat("Unknown error when creating event. Try again!")
+        );
       }
     }
   }
@@ -157,16 +176,52 @@ export default function CreateEvent() {
           </label>
           <textarea
             name="attendeeEmails"
-            placeholder="Enter emails separated by commas (e.g., user1@example.com, user2@example.com)"
+            placeholder="Enter emails separated by commas"
             value={formData.attendeeEmails}
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
           />
-          <p className="text-xs text-gray-500">
-            Separate multiple emails with commas
-          </p>
         </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Description
+          </label>
+          <textarea
+            name="desc"
+            placeholder="Enter event description"
+            value={formData.desc}
+            onChange={handleChange}
+            rows={4}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
+          />
+        </div>
+
+        {/* Tailwind taken from: https://flowbite.com/docs/forms/toggle/ */}
+        <label className="w-full inline-flex cursor-pointer p-4 bg-gray-50 border border-gray-300 rounded-lg shadow-sm items-center">
+          <input
+            type="checkbox"
+            name="requires_code"
+            checked={formData.requires_code}
+            onChange={handleChange}
+            className="sr-only peer"
+          />
+          <div
+            className="shrink-0 relative w-9 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full 
+                  after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all
+                  peer-checked:bg-blue-600 peer-checked:after:translate-x-full"
+          ></div>
+          <div className="ml-3 select-none">
+            <p className="text-sm font-medium text-gray-900">
+              Require 4-digit Code
+            </p>
+            <p className="text-xs text-gray-500">
+              Attendees must enter a random code that changes every 30 seconds
+              to join
+            </p>
+          </div>
+        </label>
 
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg">

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
+import { RequireFullUser } from "../../lib/RequireFullUser";
 
 export interface Event {
   _id: string;
@@ -20,6 +21,10 @@ export function EventDashboard() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  RequireFullUser({
+    message: "You must have an account to view your dashboard",
+  });
 
   useEffect(() => {
     async function fetchAll() {

@@ -5,7 +5,11 @@ import { WEBSITE_URL } from "../../lib/assets";
 import { Link, useNavigate } from "react-router";
 import { SolidCard } from "./SolidCard";
 
-export function LogIn() {
+type Prop = {
+  message?: string;
+};
+
+export function LogIn({ message }: Prop) {
   const navigate = useNavigate();
   const setLoginState = useLoginState();
 
@@ -78,6 +82,11 @@ export function LogIn() {
   return (
     <SolidCard title="Log In">
       <form onSubmit={handleLogIn} className="space-y-4">
+        {message && (
+          <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
+            {message}
+          </div>
+        )}
         <input
           type="email"
           name="email"

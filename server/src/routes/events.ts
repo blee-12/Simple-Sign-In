@@ -23,7 +23,7 @@ router.get('/', requireAuth, asyncRoute (
 ));
 router.post('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
-        let { name, time_start, time_end } = req.body  // user inputs
+        let { name, time_start, time_end, requires_code, attending_users } = req.body  // user inputs
         time_start = new Date(time_start);
         time_end = new Date(time_end);
         if (!name || !time_start || !time_end)
@@ -32,9 +32,17 @@ router.post('/', requireAuth, asyncRoute (
         time_start = new Date(time_start);
         time_end = new Date(time_end);
         val.validateStartEndDates(time_start, time_end);
+        if(!Array.isArray(attending_users)) {
+            throw new BadInputError("An Array of using attending the event must be provided");
+        }
+        if (attending_users.length === 0) throw new BadInputError("At least one user must be attending the event!")
+    attending_users.map((email: any) => val.validateEmail(email));
+        attending_users.map((email: any) => val.validateEmail(email))
 
-        const created_by = req.session._id || ""
-        const event = await events.createEvent(created_by, name, time_start, time_end)
+        if (typeof(requires_code) != "boolean") throw new BadInputError("requires_code must be a boolean");
+
+        const created_by = req.session._id || "";
+        const event = await events.createEvent(created_by, name, time_start, time_end, requires_code, attending_users);
         res.status(201).json({ data: event });
     }
 ));
