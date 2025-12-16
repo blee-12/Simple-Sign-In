@@ -8,6 +8,7 @@ import { Profile } from "./components/Profile";
 import { Background } from "./components/Background";
 import SignOut from "./components/auth/SignOut";
 import { EventDashboard } from "./components/events/EventDashboard";
+import { EventPage } from "./components/EventPage"
 import CreateEvent from "./components/events/CreateEvent";
 
 function App() {
