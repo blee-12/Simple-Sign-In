@@ -86,6 +86,45 @@ function getActiveWindow() {
    }
 } 
 
+export function checkAndActivateEvent(eventDoc: any) {
+    const id = eventDoc._id.toString();
+
+    // ff it's already running, ignore
+    if (activeEvents.has(id)) return;
+
+    // check if it falls within the window
+    const { startLimit, endLimit } = getActiveWindow();
+    const startTime = new Date(eventDoc.time_start);
+    const endTime = new Date(eventDoc.time_end);
+
+    // is this shit going down right now?
+    const isActive = startTime <= endLimit && endTime >= startLimit;
+
+    if (isActive) {
+        console.log(`Starting event: ${eventDoc.name}`);
+        const initialCode = generateCode();
+
+        // update a new code every 30 seconds.
+        const interval = setInterval(() => {
+            const newCode = generateCode();
+            if (activeEvents.has(id)) {
+                activeEvents.get(id)!.currentCode = newCode;
+            }
+            io.to(`${id}_creator`).emit("code_update", newCode);
+            console.log(`Rotated code for ${eventDoc.name}: ${newCode}`);
+        }, 30 * 1000);
+
+        activeEvents.set(id, {
+            id,
+            name: eventDoc.name,
+            currentCode: initialCode,
+            intervalId: interval
+        });
+        
+        io.to(`${id}_creator`).emit("code_update", initialCode);
+    }
+}
+
 async function syncActiveEvents() {
     const window = getActiveWindow();
 
@@ -96,36 +135,7 @@ async function syncActiveEvents() {
     
     // adding new active events
     for (const eventDoc of DBactiveEvents){
-        const id = eventDoc._id.toString();
-
-        // if an ative event isn't already marked as such...
-        if (!activeEvents.has(id)) {
-            console.log(`Starting event: ${eventDoc.name}`);
-
-            const initialCode = generateCode();
-            
-            const interval = setInterval(() => {
-                const newCode = generateCode();
-                
-                // update the map
-                if (activeEvents.has(id)) {
-                    activeEvents.get(id)!.currentCode = newCode;
-                }
-
-                // notify the creator
-                io.to(`${id}_creator`).emit("code_update", newCode);
-                console.log(`Rotated code for ${id}: ${newCode}`);
-
-            }, 30 * 1000);
-
-            // set it to be active.
-            activeEvents.set(id, {
-                id,
-                name: eventDoc.name,
-                currentCode: initialCode,
-                intervalId: interval
-            });
-        }
+        checkAndActivateEvent(eventDoc);
     }
 
     // removing the finished events.
@@ -173,41 +183,40 @@ io.on("connection", (socket) => {
   }
 
   // handle check in
-  socket.on("check_in", (eventId, code, email) => {
+  socket.on("check_in", async (eventId, code, email) => {
     const event = activeEvents.get(eventId);
 
-    // is the event actually running?
-    if (!event) {
-       return socket.emit("error", "This event is not active right now.");
+    if (!event) return socket.emit("error", "This event is not active right now.");
+    if (code !== event.currentCode) return socket.emit("error", "Incorrect code!");
+
+    try {
+      await eventData.checkInUser(eventId, null, email);
+
+      const roomName = `${eventId}_chat`;
+      socket.join(roomName);
+      socket.emit("success_join");
+      
+      io.to(`${eventId}_creator`).emit("student_checked_in", email);
+      console.log(`${email} checked in and joined room: ${roomName}`);
+
+    } catch (e: any) {
+      console.error("Check-in failed:", e);
+      socket.emit("error", "Database error during check-in.");
     }
-
-    // is the code correct?
-    if (code !== event.currentCode) {
-       return socket.emit("error", "Incorrect code! Please look at the screen and try again.");
-    }
-
-    const roomName = `${eventId}_chat`;
-    socket.join(roomName);
-
-    socket.emit("success_join");
-
-    io.to(`${eventId}_creator`).emit("student_checked_in", req.session.email);
-
-    // TODO: if the student isn't registered for the event, then handle that.
-
-    console.log(`${req.session.email} joined room: ${roomName}`);
-  }); 
+  });
 
   // When the creator joins, then they get added to their own room for the codes.
-  socket.on("join_creator", (eventId) => {
-    // TODO check if the user is the creator of the event.
-     
+  socket.on("join_creator", (eventId) => {     
      const event = activeEvents.get(eventId);
      if (!event) {
         return socket.emit("error", "Event is not active.");
      }
 
      socket.join(`${eventId}_creator`);
+
+     // so they can also see the chat.
+     const roomName = `${eventId}_chat`;
+     socket.join(roomName);
      
      // Send them the current code immediately so they don't have to wait 30s
      socket.emit("code_update", event.currentCode);
