@@ -26,10 +26,18 @@ export const StudentList: React.FC<StudentListProps> = ({ attendingUsers, checke
     return checkedInUsers.some((checkIn) => checkIn.userID === studentId);
   };
 
-  const handleEmailReminders = () => {
+  const handleEmailReminders = async () => {
     const missing = attendeesList.filter(id => !isCheckedIn(id));
     alert(`Sending reminder emails to ${missing.length} students... (Check console)`);
     console.log("Emailing reminders to:", missing);
+    await fetch(`${WEBSITE_URL}/events/${eventId}/email`, { 
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json' 
+        },
+        credentials: 'include',
+      }
+    )
   };
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
