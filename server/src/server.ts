@@ -7,7 +7,6 @@ import { HttpError } from '../../common/errors';
 import session from "express-session";
 import cors from "cors";
 import { ObjectId } from 'mongodb';
-import { CLIENT_URL } from "./config/staticAssets";
 import { ClientToServerEvents, ServerToClientEvents } from "../../common/socketTypes.ts";
 import eventData from "./data/events.ts";
 import 'dotenv/config';
