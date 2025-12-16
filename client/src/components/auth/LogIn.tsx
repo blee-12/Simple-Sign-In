@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { validateEmail, validatePassword } from "../../../../common/validation";
-import { validationWrapper } from "../../lib/helper";
+import { useLoginState, validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
-import { useNavigate } from "react-router";
-import { AuthCard } from "./AuthCard";
+import { Link, useNavigate } from "react-router";
+import { SolidCard } from "./SolidCard";
 
 export function LogIn() {
   const navigate = useNavigate();
+  const setLoginState = useLoginState();
 
   //state for form data
   const [formData, setFormData] = useState({
@@ -60,6 +61,7 @@ export function LogIn() {
 
         const data = await res.json();
         console.log("Login complete:", data);
+        setLoginState("FullUser");
         navigate("/dashboard");
       } catch (err: unknown) {
         setErrors((prev) => {
@@ -74,7 +76,7 @@ export function LogIn() {
   }
 
   return (
-    <AuthCard title="Log In">
+    <SolidCard title="Log In">
       <form onSubmit={handleLogIn} className="space-y-4">
         <input
           type="email"
@@ -111,7 +113,17 @@ export function LogIn() {
         >
           Log In
         </button>
+
+        <p className="text-center text-sm mt-4">
+          Don&apos;t have an account?{" "}
+          <Link
+            to="/signup"
+            className="text-blue-500 hover:text-blue-700 font-medium"
+          >
+            Sign Up!
+          </Link>
+        </p>
       </form>
-    </AuthCard>
+    </SolidCard>
   );
 }
