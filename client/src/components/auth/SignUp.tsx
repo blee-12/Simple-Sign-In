@@ -5,36 +5,65 @@ import {
   validateLastName,
   validatePassword,
 } from "../../../../common/validation";
-import { validationWrapper } from "../../lib/helper";
+import { useLoginState, validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { useNavigate } from "react-router";
-import { AuthCard } from "./AuthCard";
+import { SolidCard } from "./SolidCard";
 
 export function SignUp() {
   const navigate = useNavigate();
+  const setLoginState = useLoginState();
 
-  //state for form data
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    code: "",
   });
 
-  //array of errors
   const [errors, setErrors] = useState<string[]>([]);
+  const [step, setStep] = useState<"email" | "verify" | "complete">("email");
+  const [loading, setLoading] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   }
 
-  //called when user hits the signup button
+  async function handleEmailSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const newErrors: string[] = [];
+    const email = validationWrapper(validateEmail, formData.email, newErrors);
+    setErrors(newErrors);
+
+    if (newErrors.length === 0) {
+      try {
+        setLoading(true);
+        const res = await fetch(`${WEBSITE_URL}/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        setLoading(false);
+
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Verification failed!");
+        }
+
+        setStep("verify");
+      } catch (err: unknown) {
+        setLoading(false);
+        setErrors([(err as Error).message]);
+      }
+    }
+  }
+
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     const newErrors: string[] = [];
 
-    //validate all information
     const first_name = validationWrapper(
       validateFirstName,
       formData.firstName,
@@ -55,109 +84,154 @@ export function SignUp() {
     if (formData.password !== formData.confirmPassword) {
       newErrors.push("Passwords must match!");
     }
+    if (!formData.code || formData.code.length !== 6) {
+      newErrors.push("Verification code must be 6 digits!");
+    }
 
     setErrors(newErrors);
 
-    //if there are no errors connect the server and request to login
     if (newErrors.length === 0) {
       try {
+        setLoading(true);
         const res = await fetch(`${WEBSITE_URL}/signup`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             first_name,
             last_name,
             email,
             password,
+            code: formData.code,
           }),
           credentials: "include",
         });
+        setLoading(false);
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error || "Signup failed! Try again!");
+          throw new Error(data.error || "Signup failed!");
         }
 
         const data = await res.json();
         console.log("Signup complete:", data);
+        setLoginState("FullUser");
         navigate("/dashboard");
       } catch (err: unknown) {
-        setErrors((prev) => {
-          if (err instanceof Error) {
-            return prev.concat(err.message);
-          } else {
-            return prev.concat("Unknown error when signing up. Try again!");
-          }
-        });
+        setLoading(false);
+        setErrors([(err as Error).message]);
       }
     }
   }
 
+  async function handleResend() {
+    try {
+      setLoading(true);
+      const res = await fetch(`${WEBSITE_URL}/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: formData.email }),
+      });
+      setLoading(false);
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Resend failed!");
+      }
+    } catch (err: unknown) {
+      setLoading(false);
+      setErrors([(err as Error).message]);
+    }
+  }
+
   return (
-    <AuthCard title="Sign Up">
-      <form onSubmit={handleSignUp} className="space-y-4">
-        <input
-          type="text"
-          name="firstName"
-          placeholder="First Name"
-          value={formData.firstName}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-        />
-        <input
-          type="text"
-          name="lastName"
-          placeholder="Last Name"
-          value={formData.lastName}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-        />
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-        />
+    <SolidCard title="Sign Up">
+      {step === "email" && (
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          {errors.length > 0 && (
+            <div className="text-red-600">{errors.join(", ")}</div>
+          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-3 rounded-lg"
+          >
+            {loading ? "Sending..." : "Verify Email"}
+          </button>
+        </form>
+      )}
 
-        {errors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-            <ul className="space-y-1">
-              {errors.map((err, idx) => (
-                <li key={idx} className="text-sm">
-                  {err}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      {step === "verify" && (
+        <form onSubmit={handleSignUp} className="space-y-4">
+          <input
+            type="text"
+            name="code"
+            placeholder="6-digit Code"
+            value={formData.code}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={loading}
+            className="text-blue-500 underline"
+          >
+            Resend Code
+          </button>
+          <input
+            type="text"
+            name="firstName"
+            placeholder="First Name"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          <input
+            type="text"
+            name="lastName"
+            placeholder="Last Name"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
+          <input
+            type="password"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            value={formData.confirmPassword}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border rounded-lg"
+          />
 
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white font-medium py-3 rounded-lg transition hover:bg-blue-600 active:bg-blue-700 mt-6 hover:cursor-pointer   hover:scale-105"
-        >
-          Sign Up
-        </button>
-      </form>
-    </AuthCard>
+          {errors.length > 0 && (
+            <div className="text-red-600">{errors.join(", ")}</div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-500 text-white py-3 rounded-lg"
+          >
+            {loading ? "Signing Up..." : "Complete Sign Up"}
+          </button>
+        </form>
+      )}
+    </SolidCard>
   );
 }
