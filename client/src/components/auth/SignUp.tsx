@@ -10,10 +10,12 @@ import { useLoginState, validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { useNavigate } from "react-router";
 import { SolidCard } from "./SolidCard";
+import { RedirectIfLoggedIn } from "../../lib/redirectIfLoggedIn";
 
 export function SignUp() {
   const navigate = useNavigate();
   const setLoginState = useLoginState();
+  RedirectIfLoggedIn();
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -94,6 +96,7 @@ export function SignUp() {
     } catch (err) {
       newErrors.push(err instanceof Error ? err.message : "Invalid Code");
     }
+
 
     setErrors(newErrors);
 
