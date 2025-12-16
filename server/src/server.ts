@@ -9,7 +9,7 @@ import cors from "cors";
 import { ObjectId } from 'mongodb';
 import { CLIENT_URL } from "./config/staticAssets";
 import { ClientToServerEvents, ServerToClientEvents } from "../../common/socketTypes.ts";
-import { eventData } from "./data/index.ts";
+import eventData from "./data/events.ts";
 
 const API_PORT = 4000;
 
@@ -205,7 +205,7 @@ io.on("connection", (socket) => {
         return socket.emit("error", "Event is not active.");
      }
 
-     socket.join(`${eventId}_admin`);
+     socket.join(`${eventId}_creator`);
      
      // Send them the current code immediately so they don't have to wait 30s
      socket.emit("code_update", event.currentCode);
