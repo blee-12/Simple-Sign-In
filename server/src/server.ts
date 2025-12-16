@@ -8,6 +8,7 @@ import session from "express-session";
 import cors from "cors";
 import { ObjectId } from 'mongodb';
 import { CLIENT_URL } from "./config/staticAssets";
+import 'dotenv/config';
 
 // types
 
@@ -44,6 +45,7 @@ declare module "express-session" {
     last_name: string;
     email: string;
     password: string;
+    temporary: boolean;
   }
 }
 

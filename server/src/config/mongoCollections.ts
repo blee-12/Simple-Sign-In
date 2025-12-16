@@ -6,7 +6,7 @@ import { dbConnection } from "./mongoConnection.ts";
 
 // SignIn object
 export interface SignIn {
-  userID: User["_id"];
+  userID: User["email"];
   timestamp: Date;
 }
 
@@ -19,6 +19,11 @@ export interface User {
   last_name: string;
 }
 
+export interface UnverifiedUser {
+  email: string;
+  code: string;
+}
+
 // Event document
 export interface Event {
   _id: ObjectId; 
@@ -28,7 +33,15 @@ export interface Event {
   time_end: Date;
   attending_users: User["email"][];
   checked_in_users: SignIn[]; 
-  code: string | null;
+  requires_code: boolean;
+  code?: string | null;
+}
+
+// Token used in join links
+export interface Token {
+  _id: ObjectId;
+  email: string;
+  event: Event["_id"];
 }
 
 const getCollectionFn = <T extends object>(collection: string) => {
@@ -45,4 +58,6 @@ const getCollectionFn = <T extends object>(collection: string) => {
 };
 
 export const users = getCollectionFn<User>("users");
+export const unverifiedUsers = getCollectionFn<UnverifiedUser>("unverifiedUsers");
 export const events = getCollectionFn<Event>("events");
+export const tokens = getCollectionFn<Token>("tokens");

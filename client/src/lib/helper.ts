@@ -1,3 +1,7 @@
+import { useContext } from "react";
+import { AppContext } from "./context";
+import { useNavigate } from "react-router";
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function validationWrapper<T>(
   validator: (value: any) => T,
@@ -15,3 +19,26 @@ export function validationWrapper<T>(
     return undefined;
   }
 }
+
+//custom react hook to get context and verify that it exists
+export function useGetContext() {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error("Unable to access App Context!");
+  }
+  return context;
+}
+
+//set user login state
+export function useLoginState() {
+  const context = useGetContext();
+  return context.setAuthState;
+}
+
+//set theme color
+export function useThemeColor() {
+  const context = useGetContext();
+  return context.setTheme;
+}
+
+

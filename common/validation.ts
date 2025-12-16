@@ -57,3 +57,10 @@ export function validateStartEndDates(start: Date, end: Date) {
     const diffTime = end.getTime() - start.getTime();
     if (diffTime < 900000) { throw new BadInputError("Events must last for at least 15 minutes"); }
 }
+
+export function validateCode(str: string, numDigits: number) {
+  if (str.length !== numDigits) throw new BadInputError(`The code should be ${numDigits} long!`)
+  const regex = /^\d+$/;
+  if (!regex.test(str)) throw new BadInputError("The code must be numerical!");
+  return Number(numDigits);
+}
