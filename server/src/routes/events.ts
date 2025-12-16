@@ -22,6 +22,8 @@ router.get('/', requireAuth, asyncRoute (
 router.post('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
         let { name, time_start, time_end } = req.body  // user inputs
+        time_start = new Date(time_start);
+        time_end = new Date(time_end);
         if (!name || !time_start || !time_end)
             throw new BadInputError("All fields must be provided")
         name = val.validateAndTrimString(name, "Event Name", 5, 100)
