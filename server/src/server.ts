@@ -30,6 +30,8 @@ declare module "express-session" {
     email: string;
     password: string;
     temporary: boolean;
+    //call back for destroying session
+    destroy: (callback: (err: Error | null) => void) => void;
   }
 }
 

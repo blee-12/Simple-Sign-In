@@ -9,6 +9,9 @@ import { WEBSITE_URL } from "../lib/assets";
 import { BlurCard } from "./BlurCard";
 import { useRequireFullUser } from "../lib/RequireFullUser";
 
+import trashIcon from "../assets/trash.svg";
+import { useNavigate } from "react-router";
+
 type ThemeColors = "blue" | "purple" | "green" | "red" | "orange" | "yellow";
 
 const themeColorClasses: Record<ThemeColors, string> = {
@@ -22,6 +25,7 @@ const themeColorClasses: Record<ThemeColors, string> = {
 
 export function Profile() {
   const context = useGetContext();
+  const navigate = useNavigate();
   useRequireFullUser("You must have an account to view your profile");
 
   const { setTheme, theme } = context;
@@ -45,7 +49,9 @@ export function Profile() {
           method: "GET",
           credentials: "include",
         });
+        if (res.status === 401) context.setAuthState(null);
         if (!res.ok) throw new Error("Failed to load profile");
+
         const json = await res.json();
         const data = json.data;
         console.log("Profile Data", data);
@@ -131,6 +137,46 @@ export function Profile() {
     }
   }
 
+  async function handleDeleteProfile() {
+    setErrors([]);
+    setSuccess(false);
+
+    try {
+      const res = await fetch(`${WEBSITE_URL}/profile`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Delete failed! Try again!");
+      }
+
+      const data = await res.json();
+      console.log("Profile deleted:", data);
+      //setTime to navigate back to homepage in 3 seconds
+      setTimeout(() => {
+        navigate("/");
+      }, 3000);
+      setSuccess(true);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        theme: theme as ThemeColors,
+        password: "",
+      });
+    } catch (err: unknown) {
+      setErrors((prev) => {
+        if (err instanceof Error) {
+          return prev.concat(err.message);
+        } else {
+          return prev.concat("Unknown error when deleting profile. Try again!");
+        }
+      });
+    }
+  }
+
   return (
     <BlurCard title="Profile Settings">
       <div className="space-y-4">
@@ -200,7 +246,7 @@ export function Profile() {
 
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg">
-            <p className="text-sm">Profile updated successfully!</p>
+            <p className="text-sm">Update Successful!</p>
           </div>
         )}
 
@@ -221,6 +267,14 @@ export function Profile() {
           className="w-full bg-blue-500 text-white font-medium py-3 rounded-lg transition hover:bg-blue-600 active:bg-blue-700 mt-6 hover:cursor-pointer hover:scale-105"
         >
           Update Profile
+        </button>
+
+        <button
+          onClick={handleDeleteProfile}
+          className="w-full flex items-center justify-center bg-red-500 text-white font-medium py-3 rounded-lg transition hover:bg-red-600 active:bg-red-700 mt-3 hover:cursor-pointer hover:scale-105"
+        >
+          <img src={trashIcon} alt="Delete" className="w-5 h-5 mr-2" />
+          Delete Profile
         </button>
       </div>
     </BlurCard>

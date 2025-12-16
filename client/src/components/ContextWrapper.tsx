@@ -18,7 +18,7 @@ function getInitialTheme(): ThemeColors {
 // Felt like declaring all of the states here was a bit neater than having everything in App.tsx
 export const ContextWrapper = ({ children }: { children: ReactNode }) => {
   const [theme, setTheme] = useState<ThemeColors>(getInitialTheme);
-  const [authState, setAuthState] = useState<authStateType>(null);
+  const [authState, setAuthState] = useState<authStateType>("loading");
 
   async function getLoginState() {
     const res = await fetch(`${WEBSITE_URL}/profile`, {
