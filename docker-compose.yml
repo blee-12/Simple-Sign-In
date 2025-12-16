@@ -1,26 +1,17 @@
 services:
-  # simple-sign-in-db:
   db:
     image: mongo:8.2.2
-  #   image: mongo:4.2.2
-  #   environment:
-  #     MONGO_INITDB_DATABASE: playground-web
-  #   ports:
-  #     - 27017:27017
   client:
     image: simple-sign-in/client:latest
     build:
       dockerfile: client.dockerfile
-    # environment:
-      # PORT: 5173
-      # PROXY_API: http://playground-web-backend:8080/
+    env_file: .env
     ports:
       - 5173:5173
   server:
     image: simple-sign-in/server:latest
     build:
       dockerfile: server.dockerfile
-    environment:
-      MONGODB_URI: mongodb://db:27017/
+    env_file: .env
     ports:
       - 4000:4000

@@ -14,6 +14,18 @@ import 'dotenv/config';
 
 const API_PORT = 4000;
 
+// check env vars
+const env_vars = [
+  "EMAIL_API_KEY",
+  "EMAIL_ADDRESS",
+  "CLIENT_URL",
+  "SERVER_URL",
+  "MONGODB_URI"
+]
+for (const ev of env_vars)
+  if (process.env[ev] == null)
+    throw new Error(`Missing environment variable ${ev}`)
+
 // types
 interface EventState {
   id: string;
@@ -45,7 +57,7 @@ const httpServer = createServer(app);
 app.use(express.json());
 app.use(
   cors({
-    origin: CLIENT_URL,
+    origin: process.env.CLIENT_URL,
     credentials: true,
   })
 );
@@ -164,7 +176,7 @@ async function syncActiveEvents() {
 
 const io = new Server <ClientToServerEvents, ServerToClientEvents> (httpServer, {
     cors: {
-        origin: "http://localhost:5173", // need to replace with front end url eventually.
+        origin: process.env.CLIENT_URL,
         credentials: true 
     }
 });
