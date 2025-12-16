@@ -126,7 +126,10 @@ export function EventDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <BlurCard title="Events Running Now">
-          <EventList events={current} emptyText="Not registered for any running events" />
+          <EventList 
+          events={current}
+          user={user}
+          emptyText="Not registered for any running events" />
         </BlurCard>
 
         <BlurCard title="Upcoming Events">
