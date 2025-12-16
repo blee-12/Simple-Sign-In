@@ -59,31 +59,41 @@ export function EventDashboard() {
   }, []);
 
   const [upcoming, setUpcoming] = useState<Event[]>([]);
+  const [current, setCurrent] = useState<Event[]>([]);
   const [created, setCreated] = useState<Event[]>([]);
   const [attended, setAttended] = useState<Event[]>([]);
 
   useEffect(() => {
     if (!user) return;
 
+    console.log(events);
+
     const now = new Date();
     const nextUpcoming: Event[] = [];
     const nextCreated: Event[] = [];
     const nextAttended: Event[] = [];
+    const currentlyRunning: Event[] = [];
 
     for (const e of events) {
       const start = new Date(e.time_start);
       const end = new Date(e.time_end);
+      
+      const isAttending = e.attending_users.includes(user.email);
+      const isCreator = e.created_by === user._id;
 
-      if (start > now) nextUpcoming.push(e);
-      if (e.created_by === user._id) nextCreated.push(e);
-      if (end < now && e.attending_users.includes(user.email)) {
+      if (start > now && isAttending) nextUpcoming.push(e);
+      if (isCreator) nextCreated.push(e);
+      if (end < now && isAttending) {
         nextAttended.push(e);
       }
+      if (start >= now && end <= now && isAttending) currentlyRunning.push(e)
     }
 
     setUpcoming(nextUpcoming);
     setCreated(nextCreated);
     setAttended(nextAttended);
+    setCurrent(currentlyRunning);
+    
   }, [events, user]);
 
   if (loading) {
@@ -116,7 +126,14 @@ export function EventDashboard() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <BlurCard title="Events Running Now">
+          <EventList 
+          events={current}
+          user={user}
+          emptyText="Not registered for any running events" />
+        </BlurCard>
+
         <BlurCard title="Upcoming Events">
           <EventList
             events={upcoming}

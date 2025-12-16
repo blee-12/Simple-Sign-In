@@ -77,6 +77,86 @@ configRoutes(app);
 
 /* ~~ SOCKET.IO SECTION ~~ */
 
+// setting up sockets: 
+const io = new Server <ClientToServerEvents, ServerToClientEvents> (httpServer, {
+    cors: {
+        origin: process.env.CLIENT_URL,
+        credentials: true 
+    }
+});
+io.engine.use(sessionMiddleware);
+
+
+io.on("connection", (socket) => {
+  const req = socket.request;
+  
+  // make sure that the user is signed in.
+  if (!req.session || !req.session._id) {
+    socket.disconnect();
+    return;
+  }
+
+  // handle check in
+  socket.on("check_in", async (eventId, code, email) => {
+    const event = activeEvents.get(eventId);
+
+    if (!event) return socket.emit("error", "This event is not active right now.");
+    if (code !== event.currentCode) return socket.emit("error", "Incorrect code!");
+
+    try {
+      await eventData.checkInUser(eventId, null, email);
+
+      const roomName = `${eventId}_chat`;
+      socket.join(roomName);
+      socket.emit("success_join");
+      
+      io.to(`${eventId}_creator`).emit("student_checked_in", email);
+
+    } catch (e: any) {
+      console.error("Check-in failed:", e);
+      socket.emit("error", "Database error during check-in.");
+    }
+  });
+
+  // When the creator joins, then they get added to their own room for the codes.
+  socket.on("join_creator", (eventId) => {     
+     const event = activeEvents.get(eventId);
+     if (!event) {
+        return socket.emit("error", "Event is not active.");
+     }
+
+     socket.join(`${eventId}_creator`);
+
+     // so they can also see the chat.
+     const roomName = `${eventId}_chat`;
+     socket.join(roomName);
+     
+     // Send them the current code immediately so they don't have to wait 30s
+     socket.emit("code_update", event.currentCode);
+  });
+
+  // handle messages
+  socket.on("send_message", (eventId, message) => {
+    const roomName = `${eventId}_chat`
+
+    if (socket.rooms.has(roomName)) {
+        io.to(roomName).emit("chat_message", req.session.email, message); 
+    } else {
+        socket.emit("error", "You must join the event before sending a message!");
+    }
+  });
+
+  socket.on("is_active", (eventId) => {
+    const event = activeEvents.get(eventId);
+    if (!event) {
+      socket.emit("not_active");
+    } else {
+      socket.emit("active");
+    }
+  })
+});
+
+
 // to store active events
 const activeEvents = new Map<string, EventState>();
 
@@ -114,7 +194,6 @@ export function checkAndActivateEvent(eventDoc: any) {
     const isActive = startTime <= endLimit && endTime >= startLimit;
 
     if (isActive) {
-        console.log(`Starting event: ${eventDoc.name}`);
         const initialCode = generateCode();
 
         // update a new code every 30 seconds.
@@ -124,7 +203,6 @@ export function checkAndActivateEvent(eventDoc: any) {
                 activeEvents.get(id)!.currentCode = newCode;
             }
             io.to(`${id}_creator`).emit("code_update", newCode);
-            console.log(`Rotated code for ${eventDoc.name}: ${newCode}`);
         }, 30 * 1000);
 
         activeEvents.set(id, {
@@ -155,7 +233,6 @@ async function syncActiveEvents() {
     for (const [mapId, mapState] of activeEvents) {
             // If it's in our Map in the list from mongo, its done
             if (!activeEventIds.has(mapId)) {
-                console.log(`Ending event: ${mapState.name}`);
 
                 // clear the interval
                 clearInterval(mapState.intervalId);
@@ -171,81 +248,8 @@ async function syncActiveEvents() {
                 activeEvents.delete(mapId);
             }
         }
-
-    console.log(activeEventIds);
 }
 
-const io = new Server <ClientToServerEvents, ServerToClientEvents> (httpServer, {
-    cors: {
-        origin: process.env.CLIENT_URL,
-        credentials: true 
-    }
-});
-io.engine.use(sessionMiddleware);
-
-
-io.on("connection", (socket) => {
-  console.log("socket connection received");
-  const req = socket.request;
-  
-  // make sure that the user is signed in.
-  if (!req.session || !req.session._id) {
-    console.log("Unauthenticated, disconnecting.");
-    socket.disconnect();
-    return;
-  }
-
-  // handle check in
-  socket.on("check_in", async (eventId, code, email) => {
-    const event = activeEvents.get(eventId);
-
-    if (!event) return socket.emit("error", "This event is not active right now.");
-    if (code !== event.currentCode) return socket.emit("error", "Incorrect code!");
-
-    try {
-      await eventData.checkInUser(eventId, null, email);
-
-      const roomName = `${eventId}_chat`;
-      socket.join(roomName);
-      socket.emit("success_join");
-      
-      io.to(`${eventId}_creator`).emit("student_checked_in", email);
-      console.log(`${email} checked in and joined room: ${roomName}`);
-
-    } catch (e: any) {
-      console.error("Check-in failed:", e);
-      socket.emit("error", "Database error during check-in.");
-    }
-  });
-
-  // When the creator joins, then they get added to their own room for the codes.
-  socket.on("join_creator", (eventId) => {     
-     const event = activeEvents.get(eventId);
-     if (!event) {
-        return socket.emit("error", "Event is not active.");
-     }
-
-     socket.join(`${eventId}_creator`);
-
-     // so they can also see the chat.
-     const roomName = `${eventId}_chat`;
-     socket.join(roomName);
-     
-     // Send them the current code immediately so they don't have to wait 30s
-     socket.emit("code_update", event.currentCode);
-  });
-
-  // handle messages
-  socket.on("send_message", (eventId, message) => {
-    const roomName = `${eventId}_chat`
-
-    if (socket.rooms.has(roomName)) {
-        io.to(roomName).emit("chat_message", req.session.email, message); 
-    } else {
-        socket.emit("error", "You must join the event before sending a message!");
-    }
-  });
-});
 
 // fallback error handler
 // app.use((err: any, req: Request, res: Response, next: any) => {
