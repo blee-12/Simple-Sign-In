@@ -28,6 +28,7 @@ export const EventPage = () => {
   const [userEmail, setUserEmail] = useState<string>(""); 
 
   const [eventDetails, setEventDetails] = useState<EventDataState | null>(null);
+  const [need_code, setNeedCode] = useState<Boolean>(false)
 
   const [notification, setNotification] = useState<{ msg: string; type: "error" | "success" } | null>(null);
   const showError = (msg: string) => setNotification({ msg, type: "error" });
@@ -46,12 +47,14 @@ export const EventPage = () => {
       if (result.userEmail) {
         setUserEmail(result.userEmail);
       }
-
+      
       // update the event data state if we found an event
       if (result.eventData) {
         setEventDetails(result.eventData);
       }
-    
+
+      setNeedCode(result.need_code);
+
       switch (result.role) {
         case "creator": 
             setViewMode("creator");
@@ -67,7 +70,7 @@ export const EventPage = () => {
             break; 
       }
     });
-
+    
     // create the socket if we're authed.
     newSocket = io(`http://localhost:4000`, {
         withCredentials: true,
@@ -130,7 +133,9 @@ export const EventPage = () => {
         {viewMode === "creator" && (
             <div className="max-w-6xl mx-auto p-4 space-y-6">                
                 
-                <EventCode socket={socket} eventId={id!} onError={showError} />               
+                { need_code && (
+                  <EventCode socket={socket} eventId={id!} onError={showError} /> 
+                  )}              
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
@@ -186,6 +191,8 @@ async function fetchEventData(eventId?: string) {
     const eventResponse = await event.json();
     const eventData = eventResponse.data || eventResponse; 
 
+    const need_code = eventData.requires_code;
+
     const userId = String(userObj._id || userObj.id || "");
     const creatorId = String(eventData.created_by || eventData.creatorId || "");
 
@@ -194,7 +201,7 @@ async function fetchEventData(eventId?: string) {
         role = "creator";
     }
 
-    return { role, eventData, userEmail: userObj.email || "" };
+    return { role, need_code, eventData, userEmail: userObj.email || "" };
     
   } catch (e) {
     console.error(e);
