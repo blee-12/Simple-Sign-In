@@ -4,6 +4,6 @@ export interface MongoConfig {
 }
 
 export const mongoConfig: MongoConfig = {
-  serverUrl: "mongodb://localhost:27017/",
+  serverUrl: process.env.MONGODB_URI,
   database: "simple-signin-cs554",
 };
