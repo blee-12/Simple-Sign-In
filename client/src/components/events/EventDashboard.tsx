@@ -81,12 +81,21 @@ export function EventDashboard() {
       const isAttending = e.attending_users.includes(user.email);
       const isCreator = e.created_by === user._id;
 
-      if (start > now && isAttending) nextUpcoming.push(e);
       if (isCreator) nextCreated.push(e);
-      if (end < now && isAttending) {
-        nextAttended.push(e);
+      if (isAttending) {
+        // upcoming
+        if (start > now) {
+            nextUpcoming.push(e);
+        }
+        // in the past
+        else if (end < now) {
+            nextAttended.push(e);
+        }
+        // currently happening.
+        else { 
+            currentlyRunning.push(e);
+        }
       }
-      if (start >= now && end <= now && isAttending) currentlyRunning.push(e)
     }
 
     setUpcoming(nextUpcoming);
@@ -142,7 +151,7 @@ export function EventDashboard() {
           />
         </BlurCard>
 
-        <BlurCard title="Events You've Attended">
+        <BlurCard title="Past Events">
           <EventList
             events={attended}
             user={user}

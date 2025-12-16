@@ -33,6 +33,7 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId, userEmail
     const handleError = (msg: string) => {
         console.error("Socket Error:", msg);
         onError(msg); 
+        setIsSubmitting(false);
     };
 
     socket.once("error", handleError);
