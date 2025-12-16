@@ -4,6 +4,7 @@ export interface ClientToServerEvents {
   create_event: (eventName: string, callback: (eventId: string) => void) => void;
   check_in: (eventId: string, code: string, studentName: string) => void;
   send_message: (eventId: string, message: string) => void;
+  is_active: (eventId: string) => void;
 }
 
 export interface ServerToClientEvents {
@@ -12,4 +13,6 @@ export interface ServerToClientEvents {
   chat_message: (sender: string, message: string) => void;
   error: (msg: string) => void;
   success_join: () => void;
+  not_active: () => void;
+  active: () => void;
 }

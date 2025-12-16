@@ -27,7 +27,7 @@ export function validateEmail(email: string) {
     email = validateAndTrimString(email, "email", 3, 100);
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!regex.test(email)) throw new BadInputError("Invalid email");
-    return email;
+    return email.toLowerCase();
 }
 
 export function validatePassword(password: string) {
