@@ -8,6 +8,7 @@ import session from "express-session";
 import cors from "cors";
 import { ObjectId } from 'mongodb';
 import { CLIENT_URL } from "./config/staticAssets";
+import 'dotenv/config';
 
 // types
 
