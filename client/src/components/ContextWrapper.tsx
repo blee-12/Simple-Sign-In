@@ -1,25 +1,47 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { type authStateType, type ThemeColors } from "../lib/types";
 import { AppContext } from "../lib/context";
+import { WEBSITE_URL } from "../lib/assets";
 
 const THEME_KEY = "theme";
+const DEFAULT_THEME: ThemeColors = "blue";
+
+//checks is a proper themeColor
+
+function getInitialTheme(): ThemeColors {
+  const storageTheme = localStorage.getItem(THEME_KEY) as ThemeColors | null;
+  if (storageTheme === null) return DEFAULT_THEME;
+  return storageTheme;
+}
 
 // Wrapper around App.tsx to provide app wide context for various things
 // Felt like declaring all of the states here was a bit neater than having everything in App.tsx
 export const ContextWrapper = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<ThemeColors>("blue");
+  const [theme, setTheme] = useState<ThemeColors>(getInitialTheme);
   const [authState, setAuthState] = useState<authStateType>(null);
 
-  //attempt to get themeColor from localStorage and set it as the ThemeColor
-  const storageTheme = localStorage.getItem(THEME_KEY) as ThemeColors | null;
-  if (storageTheme) {
-    setTheme(storageTheme);
+  async function getLoginState() {
+    const res = await fetch(`${WEBSITE_URL}/profile`);
+    if (!res.ok) {
+      setAuthState(null);
+      return;
+    }
+    if (res.ok) {
+      //TODO: check response to determine type of user
+    }
   }
+
+  console.log("theme", theme);
 
   //Whenever theme state changes, useEffect run to save changes to localStorage
   useEffect(() => {
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  //check if the user is logged in or not by checking /profile
+  useEffect(() => {
+    getLoginState();
+  }, []);
 
   return (
     <AppContext.Provider value={{ theme, setTheme, authState, setAuthState }}>

@@ -2,7 +2,7 @@ import React, { createContext } from "react";
 import type { authStateType, ThemeColors } from "./types";
 
 // Types of context, gotten from intellisense hovering lol
-interface AppContextType {
+export interface AppContextType {
   theme: ThemeColors;
   setTheme: React.Dispatch<React.SetStateAction<ThemeColors>>;
   authState: authStateType;

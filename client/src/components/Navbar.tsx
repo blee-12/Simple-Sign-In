@@ -1,20 +1,15 @@
 import { Link, NavLink } from "react-router";
 import { User } from "lucide-react";
-import { useContext } from "react";
-import { AppContext } from "../lib/context";
+import { useGetContext } from "../lib/helper";
 
 export default function Navigation() {
-  const appContext = useContext(AppContext);
-  if (!appContext) {
-    throw new Error("Unable to get App Context!");
-  }
-  const { authState } = appContext;
+  const { authState } = useGetContext();
 
   //check authState to verify that the user is authenticated
   const isAuthenticated = authState === "FullUser" || authState === "EmailOnly";
 
   return (
-    <nav className="w-full border-b border-gray-200 bg-white">
+    <nav className="w-full border-b  bg-white/50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <Link
@@ -52,7 +47,7 @@ export default function Navigation() {
             </NavLink>
 
             <NavLink
-              to={isAuthenticated ? "/logout" : "/login"}
+              to={isAuthenticated ? "/signout" : "/login"}
               className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
             >
               {isAuthenticated ? "Sign out" : "Sign in"}
