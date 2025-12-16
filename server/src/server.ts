@@ -10,6 +10,7 @@ import { ObjectId } from 'mongodb';
 import { CLIENT_URL } from "./config/staticAssets";
 import { ClientToServerEvents, ServerToClientEvents } from "../../common/socketTypes.ts";
 import eventData from "./data/events.ts";
+import 'dotenv/config';
 
 const API_PORT = 4000;
 
@@ -28,6 +29,7 @@ declare module "express-session" {
     last_name: string;
     email: string;
     password: string;
+    temporary: boolean;
   }
 }
 
@@ -81,8 +83,8 @@ function getActiveWindow() {
   return {
     startLimit: new Date(now.getTime() - buffer), 
     endLimit: new Date(now.getTime() + buffer)
-  }
-}
+   }
+} 
 
 export function checkAndActivateEvent(eventDoc: any) {
     const id = eventDoc._id.toString();

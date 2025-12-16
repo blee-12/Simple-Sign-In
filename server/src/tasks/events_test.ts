@@ -1,5 +1,6 @@
 import { eventData, userData } from "../data/index.ts"
 import { dbConnection, closeConnection } from "../config/mongoConnection.ts";
+import bcrypt from "bcryptjs";
 
 
 async function main() {
@@ -10,7 +11,7 @@ async function main() {
     console.log("\nDatabase cleared!\n");
 
     // first need to create a dummy user to do a lot of these operations.
-    const user = await userData.addUser("bwoods@stevens.edu", "Bennett", "Woods", "teSt1234!");
+    const user = await userData.addUser("bwoods@stevens.edu", "Bennett", "Woods", await bcrypt.hash("teSt1234!", 10));
     
     console.log("1. Adding Event");
 
