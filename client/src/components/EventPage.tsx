@@ -9,6 +9,7 @@ import { StudentList } from "./StudentList";
 import { type ClientToServerEvents, type ServerToClientEvents } from "../../../common/socketTypes";
 import { Notification } from "./UI/Notification";
 import { NonActiveEvent } from "./NonActiveEvent";
+import { WEBSITE_URL } from "../lib/assets";
 
 type EventSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -72,7 +73,7 @@ export const EventPage = () => {
     });
     
     // create the socket if we're authed.
-    newSocket = io(`http://localhost:4000`, {
+    newSocket = io(WEBSITE_URL, {
         withCredentials: true,
         autoConnect: true,
         reconnectionAttempts: 5,
@@ -179,13 +180,13 @@ export const EventPage = () => {
 
 async function fetchEventData(eventId?: string) {
   try {
-    const session = await fetch('http://localhost:4000/users/me', { credentials: 'include' });
+    const session = await fetch(`${WEBSITE_URL}/users/me`, { credentials: 'include' });
     if (!session.ok) return { role: "unauthed", eventData: null, userEmail: "" }; 
     
     const userData = await session.json(); 
     const userObj = userData.data || userData; 
 
-    const event = await fetch(`http://localhost:4000/events/${eventId}`, { credentials: 'include' });
+    const event = await fetch(`${WEBSITE_URL}/events/${eventId}`, { credentials: 'include' });
     if (!event.ok) return { role: "no_event", eventData: null, userEmail: "" };
     
     const eventResponse = await event.json();

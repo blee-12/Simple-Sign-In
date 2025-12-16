@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"; // Added useEffect
+import { WEBSITE_URL } from "../lib/assets";
 
 interface CheckedInUser {
   userID: string;
@@ -37,7 +38,7 @@ export const StudentList: React.FC<StudentListProps> = ({ attendingUsers, checke
 
     const cleanEmail = newStudentEmail.trim();
 
-    const response = await fetch(`http://localhost:4000/events/${eventId}/register`, { 
+    const response = await fetch(`${WEBSITE_URL}/events/${eventId}/register`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json' 
