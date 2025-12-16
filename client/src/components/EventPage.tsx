@@ -88,22 +88,22 @@ export const EventPage = () => {
 
 async function checkUserRole(eventId?: string) {
   try {
-    const session = await fetch('http://localhost:4000/users/me',
-      {
-        credentials: 'include' 
-      }
-    );
+    const session = await fetch('http://localhost:4000/users/me', { credentials: 'include' });
     if (!session.ok) return "unauthed"; 
-    const userData = await session.json();
+    
+    const userData = await session.json(); 
 
-    const event = await fetch(`http://localhost:4000/events/${eventId}`);
+    const event = await fetch(`http://localhost:4000/events/${eventId}`, { credentials: 'include' });
     if (!event.ok) return "no_event"
-    const eventData = await event.json();
+    
+    const eventResponse = await event.json();
+    
+    const eventData = eventResponse.data || eventResponse; 
 
     const userId = String(userData._id || userData.id || "");
     const creatorId = String(eventData.created_by || eventData.creatorId || "");
 
-    // if theres a match and both exist,
+
     if (userId && creatorId && userId === creatorId) {
         return "creator";
     }

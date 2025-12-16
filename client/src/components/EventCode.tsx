@@ -12,7 +12,6 @@ export const EventCode: React.FC<AdminDisplayProps> = ({ socket, eventId }) => {
   const [timeLeft, setTimeLeft] = useState<number>(30); // Assuming 30s rotation
 
   useEffect(() => {
-    socket.emit("join_creator", eventId);
 
     const handleCodeUpdate = (newCode: string) => {
       setCurrentCode(newCode);
@@ -26,6 +25,8 @@ export const EventCode: React.FC<AdminDisplayProps> = ({ socket, eventId }) => {
 
     socket.on("code_update", handleCodeUpdate);
     socket.on("error", handleError);
+    
+    socket.emit("join_creator", eventId);
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
