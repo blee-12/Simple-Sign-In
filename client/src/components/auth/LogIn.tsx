@@ -2,15 +2,13 @@ import { useState } from "react";
 import { validateEmail, validatePassword } from "../../../../common/validation";
 import { useLoginState, validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { SolidCard } from "./SolidCard";
 
-type Prop = {
-  message?: string;
-};
-
-export function LogIn({ message }: Prop) {
+export function LogIn() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const message = searchParams.get("message");
   const setLoginState = useLoginState();
 
   //state for form data
@@ -82,7 +80,7 @@ export function LogIn({ message }: Prop) {
   return (
     <SolidCard title="Log In">
       <form onSubmit={handleLogIn} className="space-y-4">
-        {message && (
+        {message !== "undefined" && message && (
           <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
             {message}
           </div>

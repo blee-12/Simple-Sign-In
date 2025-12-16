@@ -24,7 +24,7 @@ export const ContextWrapper = ({ children }: { children: ReactNode }) => {
     const res = await fetch(`${WEBSITE_URL}/profile`, {
       credentials: "include",
     });
-    if (!res.ok) {
+    if (res.status === 401) {
       setAuthState(null);
       return;
     }
@@ -34,7 +34,6 @@ export const ContextWrapper = ({ children }: { children: ReactNode }) => {
       //TODO: check response to determine type of user
     }
   }
-
 
   //Whenever theme state changes, useEffect run to save changes to localStorage
   useEffect(() => {
