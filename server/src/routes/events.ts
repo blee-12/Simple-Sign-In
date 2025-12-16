@@ -5,6 +5,8 @@
 // POST /event/join/:randomToken
 
 import { Request, Response, Router } from 'express';
+import { eventData } from '../data';
+import { WithId } from 'mongodb';
 const router = Router()
 
 
@@ -25,9 +27,17 @@ router.post('/join/:randomToken', (req: Request, res: Response) => {
 
 
 // /:id
-router.get('/:id', (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response) => {
     const { id } = req.params
-    res.status(200).json({ message: `Fetched event with ID: ${id}` });
+
+    let event;
+    try {   
+        event = await eventData.getEventByID(id);
+    } catch (e) {
+        return res.status(400).json({ message: `Failed with error: ${e}`});
+    }
+    
+    res.status(200).json(event);
 });
 router.put('/:id', (req: Request, res: Response) => {
     const { id } = req.params
