@@ -66,6 +66,8 @@ export function EventDashboard() {
   useEffect(() => {
     if (!user) return;
 
+    console.log(events);
+
     const now = new Date();
     const nextUpcoming: Event[] = [];
     const nextCreated: Event[] = [];
