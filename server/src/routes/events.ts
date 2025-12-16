@@ -22,7 +22,7 @@ router.get('/', requireAuth, asyncRoute (
         let allEvents = await events.getAllEvents();
         allEvents = allEvents.filter((event) => {
             return event.created_by.toHexString() === req.session._id
-            || event.attending_users.includes(req.session._id)
+            || event.attending_users.includes(email)
         })
         return res.status(200).json({ data: allEvents });
     }
