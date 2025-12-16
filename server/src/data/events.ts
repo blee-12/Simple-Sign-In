@@ -258,9 +258,9 @@ let exportedMethods = {
 
     const eventCollection = await events();
     const activeEventsFromDb = await eventCollection.find({
-            startTime: { $lte: start },
-            endTime: { $gte: end }
-        }).toArray();
+        time_start: { $lte: end }, 
+        time_end: { $gte: start }
+    }).toArray();
 
     return activeEventsFromDb;
   }
