@@ -18,7 +18,8 @@ const router = Router()
 // POST and GET : Fetch all and create
 router.get('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
-        const allEvents = await events.getAllEvents();
+        const email = req.session.email || ""
+        const allEvents = await events.getUserEvents(email);
         return res.status(200).json({ data: allEvents });
     }
 ));
@@ -128,12 +129,19 @@ router.get('/:id', requireAuth, asyncRoute (
 router.put('/:id', requireAuth, asyncRoute ( 
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
-        let { name, time_start, time_end } = req.body  // user inputs. Must provide at least 1
         id = val.validateStrAsObjectId(id, 'Event ID');
-        if (!name.trim() && !time_start && !time_end)
+        let { name, time_start, time_end, desc } = req.body  // user inputs. Must provide at least 1
+        if (!name.trim() && !time_start && !time_end && !desc.trim())
             throw new BadInputError("No updated fields provided")
 
-        const updated = events.editEvent(id, name, time_start, time_end)
+        // check ownership
+        const userId = req.session._id
+        const event = await events.getEventByID(id);
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to edit this event");
+        }
+
+        const updated = events.editEvent(id, name, time_start, time_end, desc)
         res.status(200).json({ data: updated });
     }
 ));
@@ -141,6 +149,13 @@ router.delete('/:id', requireAuth, asyncRoute (
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
+
+        // check ownership
+        const userId = req.session._id
+        const event = await events.getEventByID(id);
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to delete this event");
+        }
 
         const deleted = events.deleteEvent(id)
         res.status(200).json({ data: deleted });
@@ -154,6 +169,13 @@ router.post('/:id/email', requireAuth, asyncRoute (
         id = val.validateStrAsObjectId(id, 'Event ID');
 
         const event = await events.getEventByID(id);
+
+        // check ownership
+        const userId = req.session._id
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to use this feature");
+        }
+
         const attendees = event.attending_users
             .filter(user => !event.checked_in_users.map(s => s.userID).includes(user))
         const tokenChecks = attendees.map(async user => !(await tokenData.tokenExists(user, id)));
@@ -188,11 +210,19 @@ router.post('/:id/email', requireAuth, asyncRoute (
     }
 ));
 
-// register users
+// register users to an event from list of email addresses
 router.post('/:id/register', requireAuth, asyncRoute (
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
+
+        // check ownership
+        const userId = req.session._id
+        const event = await events.getEventByID(id);
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to edit this event");
+        }
+
         let emails: string[] = req.body;
         if (!Array.isArray(emails)) throw new BadInputError('Expected array of emails as body');
         emails = emails.map(email => val.validateEmail(email));
