@@ -35,6 +35,7 @@ export interface Event {
   checked_in_users: SignIn[]; 
   requires_code: boolean;
   code?: string | null;
+  description: string;
 }
 
 // Token used in join links

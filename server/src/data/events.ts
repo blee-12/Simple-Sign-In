@@ -32,10 +32,12 @@ let exportedMethods = {
       return event;
     },
 
-    async createEvent(created_by: string, name: string, time_start: Date, time_end: Date, requires_code: boolean, attendeeEmails: string[]) {
+    async createEvent(created_by: string, name: string, time_start: Date, time_end: Date, requires_code: boolean, attendeeEmails: string[], description: string) {
       created_by = validateStrAsObjectId(created_by);
 
       name = validateAndTrimString(name, "Event Name", 5, 100);
+
+      description = validateAndTrimString(description, "Event Description", 5, 200);
 
       validateStartEndDates(time_start, time_end);
 
@@ -48,7 +50,8 @@ let exportedMethods = {
         attending_users: attendeeEmails,
         checked_in_users: [],
         requires_code,
-        code: null
+        code: null,
+        description
       }
 
       const eventCollection = await events();

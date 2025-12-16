@@ -13,6 +13,7 @@ export interface Event {
   attending_users: string[];
   checked_in_users: unknown[];
   code: string | null;
+  description: string;
 }
 
 export function EventDashboard() {
@@ -166,6 +167,10 @@ function EventList({
                 </span>
               )}
             </div>
+
+            <p className="text-xs text-gray-500 mt-2">
+              Description: {event.description}
+            </p>
 
             <p className="text-xs text-gray-500 mt-2">
               Attendees: {event.attending_users.length}

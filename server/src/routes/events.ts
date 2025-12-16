@@ -24,12 +24,13 @@ router.get('/', requireAuth, asyncRoute (
 ));
 router.post('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
-        let { name, time_start, time_end, requires_code, attending_users } = req.body  // user inputs
+        let { name, time_start, time_end, requires_code, attending_users, description } = req.body  // user inputs
         time_start = new Date(time_start);
         time_end = new Date(time_end);
         if (!name || !time_start || !time_end)
             throw new BadInputError("All fields must be provided")
-        name = val.validateAndTrimString(name, "Event Name", 5, 100)
+        name = val.validateAndTrimString(name, "Event Name", 5, 100);
+        description = val.validateAndTrimString(description, "Event Description", 5, 200);
         const start = new Date(time_start);
         const end = new Date(time_end);
         val.validateStartEndDates(start, end);
@@ -42,7 +43,7 @@ router.post('/', requireAuth, asyncRoute (
         if (typeof(requires_code) != "boolean") throw new BadInputError("requires_code must be a boolean");
 
         const created_by = req.session._id || "";
-        const event = await events.createEvent(created_by.toString(), name, start, end, requires_code, attending_users);;
+        const event = await events.createEvent(created_by.toString(), name, start, end, requires_code, attending_users, description);
         checkAndActivateEvent(event);
         res.status(201).json({ data: event });
     }

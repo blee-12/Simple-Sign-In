@@ -16,7 +16,7 @@ export default function CreateEvent() {
     time_end: "",
     attendeeEmails: "",
     requires_code: false,
-    desc: "", // NEW field
+    description: "",
   });
 
   useRequireFullUser("You must have an account to create an event");
@@ -53,7 +53,7 @@ export default function CreateEvent() {
 
     // Validate Event Description
     try {
-      validateAndTrimString(formData.desc, "Event Description", 5, 200);
+      validateAndTrimString(formData.description, "Event Description", 5, 200);
     } catch (err) {
       newErrors.push(
         err instanceof Error ? err.message : "Invalid Event Description"
@@ -98,7 +98,7 @@ export default function CreateEvent() {
             time_end: formData.time_end,
             attending_users: emailList,
             requires_code: formData.requires_code,
-            desc: formData.desc.trim(),
+            description: formData.description.trim(),
           }),
           credentials: "include",
         });
@@ -118,7 +118,7 @@ export default function CreateEvent() {
           time_end: "",
           attendeeEmails: "",
           requires_code: false,
-          desc: "",
+          description: "",
         });
       } catch (err: unknown) {
         setErrors((prev) =>
@@ -189,7 +189,7 @@ export default function CreateEvent() {
           <textarea
             name="desc"
             placeholder="Enter event description"
-            value={formData.desc}
+            value={formData.description}
             onChange={handleChange}
             rows={4}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
