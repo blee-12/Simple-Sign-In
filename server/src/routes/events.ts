@@ -17,18 +17,24 @@ const router = Router()
 // POST and GET : Fetch all and create
 router.get('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
-        const allEvents = await events.getAllEvents();
+        const email = req.session.email || ""
+        let allEvents = await events.getAllEvents();
+        allEvents = allEvents.filter((event) => {
+            return event.created_by.toHexString() === req.session._id
+            || event.attending_users.includes(req.session._id)
+        })
         return res.status(200).json({ data: allEvents });
     }
 ));
 router.post('/', requireAuth, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
-        let { name, time_start, time_end, requires_code, attending_users } = req.body  // user inputs
+        let { name, time_start, time_end, requires_code, attending_users, description } = req.body  // user inputs
         time_start = new Date(time_start);
         time_end = new Date(time_end);
         if (!name || !time_start || !time_end)
             throw new BadInputError("All fields must be provided")
-        name = val.validateAndTrimString(name, "Event Name", 5, 100)
+        name = val.validateAndTrimString(name, "Event Name", 5, 100);
+        description = val.validateAndTrimString(description, "Event Description", 5, 200);
         const start = new Date(time_start);
         const end = new Date(time_end);
         val.validateStartEndDates(start, end);
@@ -41,7 +47,7 @@ router.post('/', requireAuth, asyncRoute (
         if (typeof(requires_code) != "boolean") throw new BadInputError("requires_code must be a boolean");
 
         const created_by = req.session._id || "";
-        const event = await events.createEvent(created_by.toString(), name, start, end, requires_code, attending_users);;
+        const event = await events.createEvent(created_by.toString(), name, start, end, requires_code, attending_users, description);
         checkAndActivateEvent(event);
         res.status(201).json({ data: event });
     }
@@ -127,12 +133,28 @@ router.get('/:id', requireAuth, asyncRoute (
 router.put('/:id', requireAuth, asyncRoute ( 
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
-        let { name, time_start, time_end } = req.body  // user inputs. Must provide at least 1
         id = val.validateStrAsObjectId(id, 'Event ID');
-        if (!name.trim() && !time_start && !time_end)
-            throw new BadInputError("No updated fields provided")
+        
+        let { name, time_start, time_end, description } = req.body  // user inputs. Must provide at least 1
+        if (!name.trim() && !time_start && !time_end && !description.trim())
+          throw new BadInputError("No updated fields provided");
 
-        const updated = events.editEvent(id, name, time_start, time_end)
+        time_start = new Date(time_start);
+        time_end = new Date(time_end);
+        // check ownership
+        const userId = req.session._id
+        const event = await events.getEventByID(id);
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to edit this event");
+        }
+
+        const updated = await events.editEvent(
+          id,
+          name,
+          time_start,
+          time_end,
+          description
+        );
         res.status(200).json({ data: updated });
     }
 ));
@@ -140,6 +162,13 @@ router.delete('/:id', requireAuth, asyncRoute (
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
+
+        // check ownership
+        const userId = req.session._id
+        const event = await events.getEventByID(id);
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to delete this event");
+        }
 
         const deleted = events.deleteEvent(id)
         res.status(200).json({ data: deleted });
@@ -153,6 +182,13 @@ router.post('/:id/email', requireAuth, asyncRoute (
         id = val.validateStrAsObjectId(id, 'Event ID');
 
         const event = await events.getEventByID(id);
+
+        // check ownership
+        const userId = req.session._id
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to use this feature");
+        }
+
         const attendees = event.attending_users
             .filter(user => !event.checked_in_users.map(s => s.userID).includes(user))
         const tokenChecks = attendees.map(async user => !(await tokenData.tokenExists(user, id)));
@@ -187,11 +223,19 @@ router.post('/:id/email', requireAuth, asyncRoute (
     }
 ));
 
-// register users
+// register users to an event from list of email addresses
 router.post('/:id/register', requireAuth, asyncRoute (
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
+
+        // check ownership
+        const userId = req.session._id
+        const event = await events.getEventByID(id);
+        if (event.created_by.toHexString() != userId) {
+            throw new UnauthenticatedError("You are not authorized to edit this event");
+        }
+
         let emails: string[] = req.body;
         if (!Array.isArray(emails)) throw new BadInputError('Expected array of emails as body');
         emails = emails.map(email => val.validateEmail(email));

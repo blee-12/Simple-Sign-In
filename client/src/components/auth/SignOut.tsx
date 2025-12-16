@@ -17,6 +17,10 @@ export default function SignOut() {
         method: "GET",
         credentials: "include",
       });
+      if (res.status === 401) {
+        //if a value of 401 is returned the user is already signed out
+        navigate("/");
+      }
       if (!res.ok) {
         setSignedOut("error");
         return;

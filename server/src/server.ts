@@ -35,12 +35,14 @@ interface EventState {
 
 declare module "express-session" {
   interface SessionData {
-    _id: ObjectId;
+    _id: string;
     first_name: string;
     last_name: string;
     email: string;
     password: string;
     temporary: boolean;
+    //call back for destroying session
+    destroy: (callback: (err: Error | null) => void) => void;
   }
 }
 

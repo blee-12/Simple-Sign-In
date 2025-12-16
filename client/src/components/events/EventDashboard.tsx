@@ -4,6 +4,9 @@ import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
 import { useRequireFullUser } from "../../lib/RequireFullUser";
 
+import trashIcon from "../../assets/trash.svg";
+import editIcon from "../../assets/edit.svg";
+
 export interface Event {
   _id: string;
   created_by: string;
@@ -13,6 +16,7 @@ export interface Event {
   attending_users: string[];
   checked_in_users: unknown[];
   code: string | null;
+  description: string;
 }
 
 export function EventDashboard() {
@@ -114,15 +118,24 @@ export function EventDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <BlurCard title="Upcoming Events">
-          <EventList events={upcoming} emptyText="No upcoming events" />
+          <EventList
+            events={upcoming}
+            user={user}
+            emptyText="No upcoming events"
+          />
         </BlurCard>
 
         <BlurCard title="Events You've Attended">
-          <EventList events={attended} emptyText="No past attended events" />
+          <EventList
+            events={attended}
+            user={user}
+            emptyText="No past attended events"
+          />
         </BlurCard>
 
         <BlurCard title="Events You've Created">
           <EventList
+            user={user}
             events={created}
             emptyText="You haven't created any events"
           />
@@ -135,9 +148,11 @@ export function EventDashboard() {
 function EventList({
   events,
   emptyText,
+  user,
 }: {
   events: Event[];
   emptyText: string;
+  user: { _id: string; email: string } | null;
 }) {
   if (events.length === 0) {
     return <p className="text-gray-500 text-sm">{emptyText}</p>;
@@ -150,8 +165,8 @@ function EventList({
           key={event._id}
           className="p-4 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-sm transition hover:scale-105"
         >
-          <Link to={`/event/${event._id}`}>
-            <div className="flex justify-between items-start hover:underline">
+          <div className="flex justify-between items-start">
+            <Link to={`/event/${event._id}`} className="flex-1 hover:underline">
               <div>
                 <h3 className="font-semibold text-gray-800">{event.name}</h3>
                 <p className="text-sm text-gray-600 mt-1">
@@ -165,12 +180,34 @@ function EventList({
                   {event.code}
                 </span>
               )}
-            </div>
 
-            <p className="text-xs text-gray-500 mt-2">
-              Attendees: {event.attending_users.length}
-            </p>
-          </Link>
+              <p className="text-xs text-gray-500 mt-2">
+                Description: {event.description}
+              </p>
+
+              <p className="text-xs text-gray-500 mt-2">
+                Attendees: {event.attending_users.length}
+              </p>
+            </Link>
+
+            {/* Only show if user is creator */}
+            {user && event.created_by === user._id && (
+              <div className="flex space-x-2 ml-4">
+                <Link
+                  to={`/event/edit/${event._id}`}
+                  className="p-2 rounded hover:bg-gray-200 transition"
+                >
+                  <img src={editIcon} alt="Edit" className="w-5 h-5" />
+                </Link>
+                <Link
+                  to={`/event/delete/${event._id}`}
+                  className="p-2 rounded hover:bg-gray-200 transition"
+                >
+                  <img src={trashIcon} alt="Delete" className="w-5 h-5" />
+                </Link>
+              </div>
+            )}
+          </div>
         </li>
       ))}
     </ul>

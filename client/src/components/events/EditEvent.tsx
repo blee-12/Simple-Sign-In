@@ -1,47 +1,73 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router";
 import {
   validateAndTrimString,
-  validateEmail,
   validateStartEndDates,
 } from "../../../../common/validation";
-import { validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
 import { useRequireFullUser } from "../../lib/RequireFullUser";
 import BackButton from "../UI/BackButton";
 
-export default function CreateEvent() {
+function toLocalDatetimeInput(isoString: string) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  return date.toISOString().slice(0, 16);
+}
+
+export default function EditEvent() {
+  const { id } = useParams<{ id: string }>();
+
   const [formData, setFormData] = useState({
     name: "",
     time_start: "",
     time_end: "",
-    attendeeEmails: "",
-    requires_code: false,
     description: "",
   });
 
-  useRequireFullUser("You must have an account to create an event");
+  useRequireFullUser("You must have an account to edit an event");
 
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
+
+  // Load existing event data
+  useEffect(() => {
+    async function fetchEvent() {
+      try {
+        const res = await fetch(`${WEBSITE_URL}/events/${id}`, {
+          credentials: "include",
+        });
+        if (!res.ok) throw new Error("Failed to fetch event data");
+        let data = await res.json();
+        data = data?.data;
+        console.log(data.time_end);
+        setFormData({
+          name: data.name || "",
+          time_start: data.time_start
+            ? toLocalDatetimeInput(data.time_start)
+            : "",
+          time_end: data.time_end ? toLocalDatetimeInput(data.time_end) : "",
+          description: data.description || "",
+        });
+      } catch (err) {
+        setErrors([err instanceof Error ? err.message : "Error loading event"]);
+      }
+    }
+    fetchEvent();
+  }, [id]);
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
     const { name, value } = e.target;
-    const newValue =
-      e.target instanceof HTMLInputElement && e.target.type === "checkbox"
-        ? e.target.checked
-        : value;
-
     setFormData({
       ...formData,
-      [name]: newValue,
+      [name]: value,
     });
     setSuccess(false);
   }
 
-  async function handleCreateEvent() {
+  async function handleEditEvent() {
     const newErrors: string[] = [];
     setSuccess(false);
 
@@ -52,7 +78,7 @@ export default function CreateEvent() {
       newErrors.push(err instanceof Error ? err.message : "Invalid Event Name");
     }
 
-    // Validate Event Description
+    // Validate description
     try {
       validateAndTrimString(formData.description, "Event Description", 5, 200);
     } catch (err) {
@@ -73,32 +99,17 @@ export default function CreateEvent() {
       newErrors.push(err instanceof Error ? err.message : "Date Input Error");
     }
 
-    const emailList = formData.attendeeEmails
-      .split(",")
-      .map((e) => e.trim())
-      .filter((e) => e.length > 0);
-
-    if (emailList.length === 0) {
-      newErrors.push("At least one attendee email is required");
-    } else {
-      emailList.forEach((email) => {
-        validationWrapper(validateEmail, email, newErrors);
-      });
-    }
-
     setErrors(newErrors);
 
     if (newErrors.length === 0) {
       try {
-        const res = await fetch(`${WEBSITE_URL}/events`, {
-          method: "POST",
+        const res = await fetch(`${WEBSITE_URL}/events/${id}`, {
+          method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: formData.name.trim(),
             time_start: formData.time_start,
             time_end: formData.time_end,
-            attending_users: emailList,
-            requires_code: formData.requires_code,
             description: formData.description.trim(),
           }),
           credentials: "include",
@@ -106,33 +117,25 @@ export default function CreateEvent() {
 
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error || "Event creation failed! Try again!");
+          throw new Error(data.error || "Event update failed! Try again!");
         }
 
         const data = await res.json();
-        console.log("Event created:", data);
+        console.log("Event updated:", data);
 
         setSuccess(true);
-        setFormData({
-          name: "",
-          time_start: "",
-          time_end: "",
-          attendeeEmails: "",
-          requires_code: false,
-          description: "",
-        });
       } catch (err: unknown) {
         setErrors((prev) =>
           err instanceof Error
             ? prev.concat(err.message)
-            : prev.concat("Unknown error when creating event. Try again!")
+            : prev.concat("Unknown error when updating event. Try again!")
         );
       }
     }
   }
 
   return (
-    <BlurCard title="Create Event">
+    <BlurCard title="Edit Event">
       <div className="pb-5">
         <BackButton />
       </div>
@@ -174,20 +177,6 @@ export default function CreateEvent() {
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Attendee Emails
-          </label>
-          <textarea
-            name="attendeeEmails"
-            placeholder="Enter emails separated by commas"
-            value={formData.attendeeEmails}
-            onChange={handleChange}
-            rows={3}
-            className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
             Description
           </label>
           <textarea
@@ -200,34 +189,9 @@ export default function CreateEvent() {
           />
         </div>
 
-        {/* Tailwind taken from: https://flowbite.com/docs/forms/toggle/ */}
-        <label className="w-full inline-flex cursor-pointer p-4 bg-gray-50 border border-gray-300 rounded-lg shadow-sm items-center">
-          <input
-            type="checkbox"
-            name="requires_code"
-            checked={formData.requires_code}
-            onChange={handleChange}
-            className="sr-only peer"
-          />
-          <div
-            className="shrink-0 relative w-9 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full 
-                  after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all
-                  peer-checked:bg-blue-600 peer-checked:after:translate-x-full"
-          ></div>
-          <div className="ml-3 select-none">
-            <p className="text-sm font-medium text-gray-900">
-              Require 4-digit Code
-            </p>
-            <p className="text-xs text-gray-500">
-              Attendees must enter a random code that changes every 30 seconds
-              to join
-            </p>
-          </div>
-        </label>
-
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg">
-            <p className="text-sm">Event created successfully!</p>
+            <p className="text-sm">Event updated successfully!</p>
           </div>
         )}
 
@@ -244,10 +208,10 @@ export default function CreateEvent() {
         )}
 
         <button
-          onClick={handleCreateEvent}
+          onClick={handleEditEvent}
           className="w-full bg-blue-500 text-white font-medium py-3 rounded-lg transition hover:bg-blue-600 active:bg-blue-700 mt-6 hover:cursor-pointer hover:scale-105"
         >
-          Create Event
+          Update Event
         </button>
       </div>
     </BlurCard>
