@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   validateAndTrimString,
   validateEmail,
-  validateFirstName,
   validateStartEndDates,
 } from "../../../../common/validation";
 import { validationWrapper } from "../../lib/helper";
@@ -15,6 +14,7 @@ export default function CreateEvent() {
     time_start: "",
     time_end: "",
     attendeeEmails: "",
+    require_code: false, // NEW toggle
   });
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -23,7 +23,16 @@ export default function CreateEvent() {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const newValue =
+      e.target instanceof HTMLInputElement && e.target.type === "checkbox"
+        ? e.target.checked
+        : value;
+
+    setFormData({
+      ...formData,
+      [name]: newValue,
+    });
     setSuccess(false);
   }
 
@@ -38,14 +47,9 @@ export default function CreateEvent() {
       newErrors.push(err instanceof Error ? err.message : "Invalid Event Name");
     }
 
-    if (!formData.time_start) {
-      newErrors.push("Start time is required");
-    }
-    if (!formData.time_end) {
-      newErrors.push("End time is required");
-    }
+    if (!formData.time_start) newErrors.push("Start time is required");
+    if (!formData.time_end) newErrors.push("End time is required");
 
-    // Validate times
     try {
       validateStartEndDates(
         new Date(formData.time_start),
@@ -55,7 +59,6 @@ export default function CreateEvent() {
       newErrors.push(err instanceof Error ? err.message : "Date Input Error");
     }
 
-    // Validate and parse emails
     const emailList = formData.attendeeEmails
       .split(",")
       .map((e) => e.trim())
@@ -75,14 +78,13 @@ export default function CreateEvent() {
       try {
         const res = await fetch(`${WEBSITE_URL}/events`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             name: formData.name.trim(),
             time_start: formData.time_start,
             time_end: formData.time_end,
             attending_users: emailList,
+            require_code: formData.require_code,
           }),
           credentials: "include",
         });
@@ -94,21 +96,31 @@ export default function CreateEvent() {
 
         const data = await res.json();
         console.log("Event created:", data);
+
+        // Send emails using returned _id
+        if (data.data._id) {
+          await fetch(`${WEBSITE_URL}/events/${data.data._id}/email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ emailList }),
+            credentials: "include",
+          });
+        }
+
         setSuccess(true);
         setFormData({
           name: "",
           time_start: "",
           time_end: "",
           attendeeEmails: "",
+          require_code: false,
         });
       } catch (err: unknown) {
-        setErrors((prev) => {
-          if (err instanceof Error) {
-            return prev.concat(err.message);
-          } else {
-            return prev.concat("Unknown error when creating event. Try again!");
-          }
-        });
+        setErrors((prev) =>
+          err instanceof Error
+            ? prev.concat(err.message)
+            : prev.concat("Unknown error when creating event. Try again!")
+        );
       }
     }
   }
@@ -157,16 +169,40 @@ export default function CreateEvent() {
           </label>
           <textarea
             name="attendeeEmails"
-            placeholder="Enter emails separated by commas (e.g., user1@example.com, user2@example.com)"
+            placeholder="Enter emails separated by commas"
             value={formData.attendeeEmails}
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base resize-none"
           />
-          <p className="text-xs text-gray-500">
-            Separate multiple emails with commas
-          </p>
         </div>
+
+        {/* Tailwind taken from: https://flowbite.com/docs/forms/toggle/ */}
+        <label className="w-full inline-flex cursor-pointer p-4 bg-gray-50 border border-gray-300 rounded-lg shadow-sm items-center">
+          <input
+            type="checkbox"
+            name="require_code"
+            checked={formData.require_code}
+            onChange={handleChange}
+            className="sr-only peer"
+          />
+
+          <div
+            className="shrink-0 relative w-9 h-5 bg-gray-300 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded-full 
+                  after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all
+                  peer-checked:bg-blue-600 peer-checked:after:translate-x-full"
+          ></div>
+
+          <div className="ml-3 select-none">
+            <p className="text-sm font-medium text-gray-900">
+              Require 4-digit Code
+            </p>
+            <p className="text-xs text-gray-500">
+              Attendees must enter a random code that changes every 30 seconds
+              to join
+            </p>
+          </div>
+        </label>
 
         {success && (
           <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg">
