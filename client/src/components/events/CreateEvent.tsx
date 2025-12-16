@@ -187,7 +187,7 @@ export default function CreateEvent() {
             Description
           </label>
           <textarea
-            name="desc"
+            name="description"
             placeholder="Enter event description"
             value={formData.description}
             onChange={handleChange}
