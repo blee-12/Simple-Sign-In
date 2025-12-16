@@ -12,6 +12,7 @@ import { BadInputError, UnauthenticatedError } from '../../../common/errors';
 import { asyncRoute, requireAuth, sendEmail } from './utils';
 import { tokenData, userData } from '../data';
 import { CLIENT_URL } from '../config/staticAssets';
+import { checkAndActivateEvent } from '../server';
 const router = Router()
 
 // POST and GET : Fetch all and create
@@ -29,20 +30,20 @@ router.post('/', requireAuth, asyncRoute (
         if (!name || !time_start || !time_end)
             throw new BadInputError("All fields must be provided")
         name = val.validateAndTrimString(name, "Event Name", 5, 100)
-        time_start = new Date(time_start);
-        time_end = new Date(time_end);
-        val.validateStartEndDates(time_start, time_end);
-        if(!Array.isArray(attending_users)) {
+        const start = new Date(time_start);
+        const end = new Date(time_end);
+        val.validateStartEndDates(start, end);
+        if(!Array.isArray(attending_users)) {        
             throw new BadInputError("An Array of using attending the event must be provided");
         }
         if (attending_users.length === 0) throw new BadInputError("At least one user must be attending the event!")
-    attending_users.map((email: any) => val.validateEmail(email));
-        attending_users.map((email: any) => val.validateEmail(email))
+        attending_users.map((email: any) => val.validateEmail(email));
 
         if (typeof(requires_code) != "boolean") throw new BadInputError("requires_code must be a boolean");
 
         const created_by = req.session._id || "";
-        const event = await events.createEvent(created_by, name, time_start, time_end, requires_code, attending_users);
+        const event = await events.createEvent(created_by.toString(), name, start, end, requires_code, attending_users);;
+        checkAndActivateEvent(event);
         res.status(201).json({ data: event });
     }
 ));

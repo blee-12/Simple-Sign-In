@@ -1,5 +1,6 @@
 
 export interface ClientToServerEvents {
+  join_creator: (eventId: string) => void;
   create_event: (eventName: string, callback: (eventId: string) => void) => void;
   check_in: (eventId: string, code: string, studentName: string) => void;
   send_message: (eventId: string, message: string) => void;

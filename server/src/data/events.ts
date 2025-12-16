@@ -256,6 +256,19 @@ let exportedMethods = {
       if (!user) throw new Error("User does not exist");
       const eventList = await eventCollection.find({created_by: user._id}).toArray();
       return eventList;
+  },
+
+  async getEventsInWindow(start: Date, end: Date) {
+    if (!start) throw new BadInputError("Must provide a start date!");
+    if (!end) throw new BadInputError("Must provide an end date!");
+
+    const eventCollection = await events();
+    const activeEventsFromDb = await eventCollection.find({
+        time_start: { $lte: end }, 
+        time_end: { $gte: start }
+    }).toArray();
+
+    return activeEventsFromDb;
   }
 };
 
