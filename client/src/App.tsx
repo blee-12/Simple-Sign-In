@@ -10,6 +10,7 @@ import SignOut from "./components/auth/SignOut";
 import { EventDashboard } from "./components/events/EventDashboard";
 import { EventPage } from "./components/EventPage"
 import CreateEvent from "./components/events/CreateEvent";
+import { EventPage } from "./components/EventPage";
 
 function App() {
   return (

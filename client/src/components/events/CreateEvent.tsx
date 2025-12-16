@@ -7,13 +7,9 @@ import {
 import { validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
-import { RequireFullUser } from "../../lib/RequireFullUser";
+import { useRequireFullUser } from "../../lib/RequireFullUser";
 
 export default function CreateEvent() {
-  RequireFullUser({
-    message: "You must have an account to create an event",
-  });
-
   const [formData, setFormData] = useState({
     name: "",
     time_start: "",
@@ -22,6 +18,8 @@ export default function CreateEvent() {
     requires_code: false,
     desc: "", // NEW field
   });
+
+  useRequireFullUser("You must have an account to create an event");
 
   const [errors, setErrors] = useState<string[]>([]);
   const [success, setSuccess] = useState(false);
@@ -57,10 +55,10 @@ export default function CreateEvent() {
     try {
       validateAndTrimString(formData.desc, "Event Description", 5, 200);
     } catch (err) {
-      newErrors.push(err instanceof Error ? err.message : "Invalid Event Description");
+      newErrors.push(
+        err instanceof Error ? err.message : "Invalid Event Description"
+      );
     }
-
-    
 
     if (!formData.time_start) newErrors.push("Start time is required");
     if (!formData.time_end) newErrors.push("End time is required");
