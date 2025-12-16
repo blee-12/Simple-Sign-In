@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { WEBSITE_URL } from "../../lib/assets";
 import { BlurCard } from "../BlurCard";
 import { useRequireFullUser } from "../../lib/RequireFullUser";
@@ -148,25 +148,29 @@ function EventList({
       {events.map((event) => (
         <li
           key={event._id}
-          className="p-4 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-sm transition"
+          className="p-4 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-sm transition hover:scale-105"
         >
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="font-semibold text-gray-800">{event.name}</h3>
-              <p className="text-sm text-gray-600 mt-1">
-                {new Date(event.time_start).toLocaleString()} –{" "}
-                {new Date(event.time_end).toLocaleString()}
-              </p>
+          <Link to={`/event/${event._id}`}>
+            <div className="flex justify-between items-start hover:underline">
+              <div>
+                <h3 className="font-semibold text-gray-800">{event.name}</h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  {new Date(event.time_start).toLocaleString()} –{" "}
+                  {new Date(event.time_end).toLocaleString()}
+                </p>
+              </div>
+
+              {event.code && (
+                <span className="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                  {event.code}
+                </span>
+              )}
             </div>
-            {event.code && (
-              <span className="text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                {event.code}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Attendees: {event.attending_users.length}
-          </p>
+
+            <p className="text-xs text-gray-500 mt-2">
+              Attendees: {event.attending_users.length}
+            </p>
+          </Link>
         </li>
       ))}
     </ul>

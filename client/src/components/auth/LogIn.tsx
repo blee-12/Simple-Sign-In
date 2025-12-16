@@ -4,12 +4,15 @@ import { useLoginState, validationWrapper } from "../../lib/helper";
 import { WEBSITE_URL } from "../../lib/assets";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { SolidCard } from "./SolidCard";
+import { RedirectIfLoggedIn } from "../../lib/redirectIfLoggedIn";
 
 export function LogIn() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const message = searchParams.get("message");
   const setLoginState = useLoginState();
+
+  RedirectIfLoggedIn();
 
   //state for form data
   const [formData, setFormData] = useState({
