@@ -14,7 +14,7 @@ export default function CreateEvent() {
     time_start: "",
     time_end: "",
     attendeeEmails: "",
-    require_code: false, // NEW toggle
+    requires_code: false, // NEW toggle
   });
 
   const [errors, setErrors] = useState<string[]>([]);
@@ -84,7 +84,7 @@ export default function CreateEvent() {
             time_start: formData.time_start,
             time_end: formData.time_end,
             attending_users: emailList,
-            require_code: formData.require_code,
+            requires_code: formData.requires_code,
           }),
           credentials: "include",
         });
@@ -113,7 +113,7 @@ export default function CreateEvent() {
           time_start: "",
           time_end: "",
           attendeeEmails: "",
-          require_code: false,
+          requires_code: false,
         });
       } catch (err: unknown) {
         setErrors((prev) =>
@@ -181,8 +181,8 @@ export default function CreateEvent() {
         <label className="w-full inline-flex cursor-pointer p-4 bg-gray-50 border border-gray-300 rounded-lg shadow-sm items-center">
           <input
             type="checkbox"
-            name="require_code"
-            checked={formData.require_code}
+            name="requires_code"
+            checked={formData.requires_code}
             onChange={handleChange}
             className="sr-only peer"
           />
