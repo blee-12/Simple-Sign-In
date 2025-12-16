@@ -12,7 +12,7 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Clear errors when the user starts typing again
+  // clear errors when the user starts typing again
   useEffect(() => {
     if (error) setError(null);
   }, [code, error]);
@@ -28,8 +28,6 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
       return;
     }
 
-    // 1. Setup a one-time listener for errors in case the check-in fails
-    // (If it succeeds, the parent component handles the view switch via 'success_join')
     const handleError = (msg: string) => {
       setError(msg);
       setIsSubmitting(false);
@@ -37,12 +35,9 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
 
     socket.once("error", handleError);
 
-    // 2. Emit the check-in attempt
-    // Note: We send an empty string for email since the server pulls it from req.session
     console.log(`Checking into event ${eventId} with code ${code}`);
     socket.emit("check_in", eventId, code, ""); 
 
-    // Cleanup: If the component unmounts quickly, remove the listener
     return () => {
       socket.off("error", handleError);
     };
@@ -52,7 +47,6 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
     <div className="flex flex-col items-center justify-center min-h-[50vh] p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
         
-        {/* Header */}
         <div className="bg-blue-600 p-6 text-center">
           <h2 className="text-white text-2xl font-bold tracking-tight">
             Event Check-In
@@ -62,11 +56,9 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
           </p>
         </div>
 
-        {/* Form Body */}
         <div className="p-8">
           <form onSubmit={handleSubmit} className="flex flex-col gap-6">
             
-            {/* Code Input */}
             <div>
               <label 
                 htmlFor="code" 
@@ -83,11 +75,10 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
                 className="w-full text-center text-4xl font-mono font-bold tracking-[0.5em] py-4 border-b-2 border-gray-200 text-gray-800 focus:outline-none focus:border-blue-500 transition-colors placeholder-gray-200"
                 placeholder="0000"
                 value={code}
-                onChange={(e) => setCode(e.target.value.slice(0, 4))} // Enforce max length
+                onChange={(e) => setCode(e.target.value.slice(0, 4))} 
               />
             </div>
 
-            {/* Error Message */}
             {error && (
               <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 animate-pulse">
                 <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +90,7 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
               </div>
             )}
 
-            {/* Submit Button */}
+
             <button
               type="submit"
               disabled={isSubmitting || code.length < 4}
@@ -125,7 +116,6 @@ export const CheckInForm: React.FC<CheckInProps> = ({ socket, eventId }) => {
           </form>
         </div>
 
-        {/* Footer */}
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 text-center">
           <p className="text-xs text-gray-400">
             Event ID: <span className="font-mono text-gray-500">{eventId}</span>
