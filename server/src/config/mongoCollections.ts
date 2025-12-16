@@ -31,6 +31,13 @@ export interface Event {
   code: string | null;
 }
 
+// Token used in join links
+export interface Token {
+  _id: ObjectId;
+  email: string;
+  event: Event["_id"];
+}
+
 const getCollectionFn = <T extends object>(collection: string) => {
   let _col: Collection<T> | undefined = undefined;
 
@@ -46,3 +53,4 @@ const getCollectionFn = <T extends object>(collection: string) => {
 
 export const users = getCollectionFn<User>("users");
 export const events = getCollectionFn<Event>("events");
+export const tokens = getCollectionFn<Token>("tokens");
