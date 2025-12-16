@@ -19,6 +19,11 @@ export interface User {
   last_name: string;
 }
 
+export interface UnverifiedUser {
+  email: string;
+  code: string;
+}
+
 // Event document
 export interface Event {
   _id: ObjectId; 
@@ -53,5 +58,6 @@ const getCollectionFn = <T extends object>(collection: string) => {
 };
 
 export const users = getCollectionFn<User>("users");
+export const unverifiedUsers = getCollectionFn<UnverifiedUser>("unverifiedUsers");
 export const events = getCollectionFn<Event>("events");
 export const tokens = getCollectionFn<Token>("tokens");

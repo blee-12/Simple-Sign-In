@@ -9,9 +9,10 @@ import {
   validateLastName,
   validateEmail,
   validatePassword,
+  validateAndTrimString,
 } from "../../../common/validation";
 import { userData } from '../data';
-import { asyncRoute, requireAuth } from "./utils";
+import { asyncRoute, requireAuth, sendEmail } from "./utils";
 import { BadInputError, NotFoundError } from "../../../common/errors";
 
 const router = Router();
@@ -23,6 +24,9 @@ router.post("/signup", asyncRoute (
     let last_name = validateLastName(req.body.last_name);
     let email = validateEmail(req.body.email);
     let password = validatePassword(req.body.password);
+    let code = validateAndTrimString(req.body.code, "Code", 6, 6);
+
+    await userData.verifyUserCode(email, code);
 
     password = await bcrypt.hash(password, 10);
 
@@ -35,6 +39,8 @@ router.post("/signup", asyncRoute (
       }
     }
     const newUser = await userData.addUser(email, first_name, last_name, password);
+
+    await userData.deleteUnverifiedUser(email);
     
     // save to session
     req.session._id = newUser._id.toHexString();
@@ -74,6 +80,15 @@ router.get("/signout", requireAuth, asyncRoute (
       }
       return res.send({ status: "signed out" });
     });
+  }
+));
+
+router.post("/verify", asyncRoute (
+  async (req: Request, res: Response, next: NextFunction) => {
+    const email = validateEmail(req.body.email);
+    const unverifiedUser = await userData.createUnverifiedUser(email);
+    await sendEmail(email, "Verify your email", `Your verification code is: ${unverifiedUser.code}`);
+    res.status(200).json({ message: "Code sent to email" });
   }
 ));
 
