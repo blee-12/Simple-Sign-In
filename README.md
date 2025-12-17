@@ -17,7 +17,19 @@ Make sure Docker and Docker Compose are both installed.
 In the project directory, run the project with:
 
 ```bash
-docker compose up
+docker compose up -d
+```
+
+To seed the database, while the app is running, run:
+
+```bash
+docker compose exec server npm run seed
+```
+
+To stop the app:
+
+```bash
+docker compose down
 ```
 
 The app can be accessed at the URL in the `CLIENT_URL` variable. By default it is http://127.0.0.1:5173.
