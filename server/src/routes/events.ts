@@ -127,11 +127,10 @@ router.get('/:id', requireSession, asyncRoute (
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
         const event = await events.getEventByID(id)
-        const isTemp = req.session.temporary || false
 
         // check if user is member - attendee or logged in creator
         let email = req.session.email || ""
-        if (!event.attending_users.includes(email) && (!isTemp && event.created_by.toHexString() != req.session._id))
+        if (!event.attending_users.includes(email) && event.created_by.toHexString() != req.session._id)
             throw new UnauthenticatedError("You are not authorized to view this resource");
 
         return res.status(200).json({data: event});
