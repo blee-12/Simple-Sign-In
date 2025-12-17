@@ -9,13 +9,13 @@ import { NextFunction, Request, Response, Router } from 'express';
 import events from '../data/events'
 import * as val from '../../../common/validation';
 import { BadInputError, UnauthenticatedError } from '../../../common/errors';
-import { asyncRoute, requireAuth, sendEmail } from './utils';
+import { asyncRoute, requireAccount, requireSession, sendEmail } from './utils';
 import { tokenData, userData } from '../data';
 import { checkAndActivateEvent } from '../server';
 const router = Router()
 
 // POST and GET : Fetch all and create
-router.get('/', requireAuth, asyncRoute ( 
+router.get('/', requireAccount, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
         const email = req.session.email || ""
         let allEvents = await events.getAllEvents();
@@ -26,7 +26,7 @@ router.get('/', requireAuth, asyncRoute (
         return res.status(200).json({ data: allEvents });
     }
 ));
-router.post('/', requireAuth, asyncRoute ( 
+router.post('/', requireAccount, asyncRoute ( 
     async (req: Request, res: Response, next: NextFunction) => {
         let { name, time_start, time_end, requires_code, attending_users, description } = req.body  // user inputs
         time_start = new Date(time_start);
@@ -122,15 +122,21 @@ router.post('/join/:randomToken', asyncRoute (
 ));
 
 // /:id
-router.get('/:id', requireAuth, asyncRoute ( 
+router.get('/:id', requireSession, asyncRoute ( 
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
         const event = await events.getEventByID(id)
+
+        // check if user is member
+        let email = req.session.email || ""
+        if (!event.attending_users.includes(email))
+            throw new UnauthenticatedError("You are not authorized to view this resource");
+
         return res.status(200).json({data: event});
     }
 ));
-router.put('/:id', requireAuth, asyncRoute ( 
+router.put('/:id', requireAccount, asyncRoute ( 
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
@@ -158,7 +164,7 @@ router.put('/:id', requireAuth, asyncRoute (
         res.status(200).json({ data: updated });
     }
 ));
-router.delete('/:id', requireAuth, asyncRoute ( 
+router.delete('/:id', requireAccount, asyncRoute ( 
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
@@ -176,7 +182,7 @@ router.delete('/:id', requireAuth, asyncRoute (
 ));
 
 // send out event emails
-router.post('/:id/email', requireAuth, asyncRoute (
+router.post('/:id/email', requireAccount, asyncRoute (
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');
@@ -224,7 +230,7 @@ router.post('/:id/email', requireAuth, asyncRoute (
 ));
 
 // register users to an event from list of email addresses
-router.post('/:id/register', requireAuth, asyncRoute (
+router.post('/:id/register', requireAccount, asyncRoute (
     async (req: Request<{id: string}>, res: Response, next: NextFunction) => {
         let { id } = req.params
         id = val.validateStrAsObjectId(id, 'Event ID');

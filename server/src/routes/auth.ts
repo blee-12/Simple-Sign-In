@@ -12,7 +12,7 @@ import {
   validateAndTrimString,
 } from "../../../common/validation";
 import { userData } from '../data';
-import { asyncRoute, requireAuth, sendEmail } from "./utils";
+import { asyncRoute, requireAccount, sendEmail } from "./utils";
 import { BadInputError, NotFoundError } from "../../../common/errors";
 
 const router = Router();
@@ -75,7 +75,7 @@ router.post("/signin", asyncRoute (
   }
 ));
 
-router.get("/signout", requireAuth, asyncRoute (
+router.get("/signout", requireAccount, asyncRoute (
   async (req: Request, res: Response, next: NextFunction) => {
     req.session.destroy((err) => {
       if (err) {

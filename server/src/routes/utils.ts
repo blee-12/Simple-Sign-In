@@ -26,13 +26,24 @@ export function errorHandler(
 }
 
 // require auth for protected routes
-export function requireAuth(
+export function requireAccount(
 	req: Request,
 	res: Response,
 	next: NextFunction
 ) {
-	if (!req.session || !req.session._id) {
+	if (!req.session || !req.session._id || req.session.temporary) {
 		return res.status(401).json({ error: "You must be logged in to access this resource" })
+	}
+	return next()
+}
+
+export function requireSession(
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	if (!req.session) {
+		return res.status(401).json({ error: "You cannot access this resource" })
 	}
 	return next()
 }

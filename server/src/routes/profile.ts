@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express";
-import { asyncRoute, requireAuth } from "./utils";
+import { asyncRoute, requireAccount } from "./utils";
 import * as val from "../../../common/validation";
 import users from "../data/users";
 import { BadInputError } from "../../../common/errors";
@@ -8,7 +8,7 @@ const router = Router();
 
 router.get(
   "/",
-  requireAuth,
+  requireAccount,
   asyncRoute(async (req: Request, res: Response, next: NextFunction) => {
     let id = req.session._id || "";
     const user = await users.getUserByID(id);
@@ -23,7 +23,7 @@ router.get(
 );
 router.put(
   "/",
-  requireAuth,
+  requireAccount,
   asyncRoute(async (req: Request, res: Response, next: NextFunction) => {
     let email = req.session.email || "";
     let { first_name, last_name, password } = req.body; // user inputs. Must provide at least 1
@@ -53,7 +53,7 @@ router.put(
 );
 router.delete(
   "/",
-  requireAuth,
+  requireAccount,
   asyncRoute(async (req: Request, res: Response, next: NextFunction) => {
     let id = req.session._id;
     id = val.validateStrAsObjectId(id);
