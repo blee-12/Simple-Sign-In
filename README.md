@@ -20,6 +20,8 @@ In the project directory, run the project with:
 docker compose up
 ```
 
+The app can be accessed at the URL in the `CLIENT_URL` variable. By default it is http://127.0.0.1:5173.
+
 ### Node.js
 
 Use Node.js v24.12 LTS or greater.
@@ -33,6 +35,8 @@ The steps to run the client and server are the same:
 2. Copy the `.env` file into the directory
 3. Run `npm install` to install dependencies
 4. Run `npm start` to run the program
+
+The app can be accessed at the URL in the `CLIENT_URL` variable. By default it is http://127.0.0.1:5173.
 
 ### Deploy to AWS
 
