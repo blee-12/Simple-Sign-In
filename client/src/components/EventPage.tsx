@@ -50,8 +50,40 @@ export const EventPage = () => {
       }
       
       // update the event data state if we found an event
+      if (result.userEmail) {
+        setUserEmail(result.userEmail);
+      }
+      
+      // auto-add the creator to the event if they aren't in there.
       if (result.eventData) {
-        setEventDetails(result.eventData);
+        let updatedEventData = { ...result.eventData };
+
+        if (result.role === "creator") {
+            const creatorEmail = result.userEmail;
+
+            if (!updatedEventData.attending_users.includes(creatorEmail)) {
+                updatedEventData = {
+                    ...updatedEventData,
+                    attending_users: [...updatedEventData.attending_users, creatorEmail]
+                };
+            }
+
+            const isCheckedIn = updatedEventData.checked_in_users.some(
+                (u: any) => u.userID === creatorEmail
+            );
+
+            if (!isCheckedIn) {
+                 updatedEventData = {
+                    ...updatedEventData,
+                    checked_in_users: [
+                        ...updatedEventData.checked_in_users, 
+                        { userID: creatorEmail, timestamp: new Date().toISOString() }
+                    ]
+                };
+            }
+        }
+
+        setEventDetails(updatedEventData);
       }
 
       setNeedCode(result.need_code);
@@ -67,10 +99,10 @@ export const EventPage = () => {
           // attempt the join
           newSocket?.emit("check_in_no_code", id, result.userEmail);
       } else { 
-
         switch (result.role) {
           case "creator": 
               setViewMode("creator");
+              newSocket?.emit("join_creator", id); 
               break; 
           case "student_lobby":             
               setViewMode("student_lobby");
@@ -93,6 +125,23 @@ export const EventPage = () => {
     });
 
     setSocket(newSocket);
+
+    newSocket.on("user_checked_in", (newCheckIn) => {      
+      setEventDetails((prev) => {
+        if (!prev) return null;
+
+        // prevent duplicate check-ins
+        const alreadyCheckedIn = prev.checked_in_users.some(
+          (user) => user.userID === newCheckIn.userID
+        );
+        if (alreadyCheckedIn) return prev;
+
+        return {
+          ...prev,
+          checked_in_users: [...prev.checked_in_users, newCheckIn],
+        };
+      });
+    });
 
     // check if the event is active.
     newSocket.on("not_active", () => {

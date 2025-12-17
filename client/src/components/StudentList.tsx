@@ -46,6 +46,12 @@ export const StudentList: React.FC<StudentListProps> = ({ attendingUsers, checke
 
     const cleanEmail = newStudentEmail.trim();
 
+    if (attendeesList.includes(cleanEmail)) {
+      setIsModalOpen(false);
+      setNewStudentEmail("");
+      return; // do nothing.
+    }
+
     const response = await fetch(`${WEBSITE_URL}/events/${eventId}/register`, { 
         method: 'POST',
         headers: {
@@ -65,7 +71,6 @@ export const StudentList: React.FC<StudentListProps> = ({ attendingUsers, checke
     setNewStudentEmail("");
     setIsModalOpen(false);
   };
-
   return (
     <>
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8 relative">
