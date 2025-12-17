@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { io, Socket } from "socket.io-client";
 import { EventCode } from "./EventCode";
@@ -26,116 +26,30 @@ interface EventDataState {
 
 export const EventPage = () => {
   const { id = "" } = useParams();
-  const [socket, setSocket] = useState<EventSocket | null>(null);
+  const navigate = useNavigate();
 
+  const hasAttemptedAutoJoin = useRef(false);
+
+  const [socket, setSocket] = useState<EventSocket | null>(null);
   const [viewMode, setViewMode] = useState<
     "loading" | "creator" | "student_lobby" | "student_chat" | "not_active"
   >("loading");
+  
   const [userEmail, setUserEmail] = useState<string>("");
   const [isActive, setIsActive] = useState<boolean>(true);
-
   const [eventDetails, setEventDetails] = useState<EventDataState | null>(null);
-  const [need_code, setNeedCode] = useState<boolean>(false);
+  const [needCode, setNeedCode] = useState<boolean>(false);
 
   const [notification, setNotification] = useState<{
     msg: string;
     type: "error" | "success";
   } | null>(null);
+
   const showError = (msg: string) => setNotification({ msg, type: "error" });
-  const showSuccess = (msg: string) =>
-    setNotification({ msg, type: "success" });
-
-  const navigate = useNavigate();
-
-  useEffect(() => console.log("View Mode:", viewMode), [viewMode]);
 
   useEffect(() => {
-    let newSocket: EventSocket | null = null;
-    let isMounted = true;
-
-    // determine the user's role
-    fetchEventData(id).then((result) => {
-      if (!isMounted) return;
-
-      if (result.userEmail) {
-        setUserEmail(result.userEmail);
-      }
-
-      // update the event data state if we found an event
-      if (result.userEmail) {
-        setUserEmail(result.userEmail);
-      }
-
-      // auto-add the creator to the event if they aren't in there.
-      if (result.eventData) {
-        let updatedEventData = { ...result.eventData };
-
-        if (result.role === "creator") {
-          const creatorEmail = result.userEmail;
-
-          if (!updatedEventData.attending_users.includes(creatorEmail)) {
-            updatedEventData = {
-              ...updatedEventData,
-              attending_users: [
-                ...updatedEventData.attending_users,
-                creatorEmail,
-              ],
-            };
-          }
-
-          const isCheckedIn = updatedEventData.checked_in_users.some(
-            (u: any) => u.userID === creatorEmail
-          );
-
-          if (!isCheckedIn) {
-            updatedEventData = {
-              ...updatedEventData,
-              checked_in_users: [
-                ...updatedEventData.checked_in_users,
-                { userID: creatorEmail, timestamp: new Date().toISOString() },
-              ],
-            };
-          }
-        }
-
-        setEventDetails(updatedEventData);
-      }
-
-      setNeedCode(result.need_code);
-
-      if (!isActive) return;
-
-      if (result.role === "student_lobby" && !result.need_code) {
-        console.log("Event does not require code. Auto-checking in...");
-
-        newSocket?.once("error", (err) => {
-          console.warn("Auto-join failed:", err);
-          setViewMode("student_lobby");
-        });
-
-        // attempt the join
-        newSocket?.emit("check_in_no_code", id, result.userEmail);
-      } else {
-        switch (result.role) {
-          case "creator":
-            setViewMode("creator");
-            newSocket?.emit("join_creator", id);
-            break;
-          case "student_lobby":
-            setViewMode("student_lobby");
-            break;
-          case "no_event":
-            navigate("/");
-            break;
-          case "unauthed":
-            navigate("/signup");
-            break;
-        }
-      }
-    });
-
-    // create the socket if we're authed.
-    newSocket = io(WEBSITE_URL, {
+    console.log("Initializing Socket...");
+    const newSocket = io(WEBSITE_URL, {
       withCredentials: true,
       autoConnect: true,
       reconnectionAttempts: 5,
@@ -143,55 +57,105 @@ export const EventPage = () => {
 
     setSocket(newSocket);
 
-    newSocket.on("user_checked_in", (newCheckIn) => {
-      setEventDetails((prev) => {
-        if (!prev) return null;
-
-        // prevent duplicate check-ins
-        const alreadyCheckedIn = prev.checked_in_users.some(
-          (user) => user.userID === newCheckIn.userID
-        );
-        if (alreadyCheckedIn) return prev;
-
-        return {
-          ...prev,
-          checked_in_users: [...prev.checked_in_users, newCheckIn],
-        };
-      });
-    });
-
-    // check if the event is active.
     newSocket.on("not_active", () => {
       setIsActive(false);
       setViewMode("not_active");
-      return;
     });
 
-    newSocket.emit("is_active", id);
-
-    // wait for a successful join!
     newSocket.on("success_join", () => {
-      if (viewMode !== "creator") {
-        setViewMode("student_chat");
-      }
-      showSuccess(`Connection successful!`);
+      setViewMode((prev) => (prev === "creator" ? "creator" : "student_chat"));
     });
 
     newSocket.on("error", (err) => {
       showError(`Connection failed: ${err}`);
     });
 
+    newSocket.emit("is_active", id);
+
     return () => {
-      isMounted = false;
       newSocket.disconnect();
     };
-  }, [id, navigate, isActive, viewMode]);
+  }, [id]); 
+
+
+  useEffect(() => {
+    if (!socket) return; 
+    let isMounted = true;
+
+    fetchEventData(id).then((result) => {
+      if (!isMounted) return;
+
+      if (result.userEmail) setUserEmail(result.userEmail);
+      if (result.eventData) setEventDetails(result.eventData);
+      setNeedCode(result.need_code);
+
+      if (!isActive) return;
+
+      if (result.role === "creator") {
+        setViewMode("creator");
+        socket.emit("join_creator", id);
+      } 
+      else if (result.role === "student_lobby") {
+        
+        const isAlreadyCheckedIn = result.eventData?.checked_in_users?.some(
+            (u: any) => u.userID === result.userEmail
+        );
+
+        if (isAlreadyCheckedIn) {
+            console.log("User already in DB. Rejoining session...");
+            socket.emit("rejoin", id); 
+        } 
+        else if (!result.need_code && !hasAttemptedAutoJoin.current) {
+          console.log("Auto-checking in...");
+          hasAttemptedAutoJoin.current = true;
+          socket.emit("check_in_no_code", id, result.userEmail);
+        } 
+        else {
+          setViewMode("student_lobby");
+        }
+
+      } 
+      else if (result.role === "no_event") {
+        navigate("/");
+      } 
+      else if (result.role === "unauthed") {
+        navigate("/signup");
+      }
+    });
+
+    return () => { isMounted = false; };
+  }, [id, socket, isActive, navigate]); 
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewCheckIn = (newCheckIn: any) => {
+      setEventDetails((prev) => {
+        if (!prev) return null;
+        const exists = prev.checked_in_users.some(
+          (user) => user.userID === newCheckIn.userID
+        );
+        if (exists) return prev;
+        return {
+          ...prev,
+          checked_in_users: [...prev.checked_in_users, newCheckIn],
+        };
+      });
+    };
+
+    socket.on("user_checked_in", handleNewCheckIn);
+
+    return () => {
+      socket.off("user_checked_in", handleNewCheckIn);
+    };
+  }, [socket]);
+
 
   if (viewMode === "loading" || !socket)
     return <div className="p-10 text-center">Loading Event...</div>;
 
-  if (!isActive && eventDetails) {
-    return <NonActiveEvent eventName={eventDetails.name}></NonActiveEvent>;
+  if (!isActive) {
+    return <NonActiveEvent eventName={eventDetails?.name || "Event"} />;
   }
 
   return (
@@ -219,9 +183,9 @@ export const EventPage = () => {
         )}
 
       <div className="flex-grow">
-        {viewMode === "creator" && (
+        {viewMode === "creator" && socket && (
           <div className="max-w-6xl mx-auto p-4 space-y-6">
-            {need_code && (
+            {needCode && (
               <EventCode socket={socket} eventId={id!} onError={showError} />
             )}
 
@@ -250,7 +214,7 @@ export const EventPage = () => {
           </div>
         )}
 
-        {viewMode === "student_lobby" && (
+        {viewMode === "student_lobby" && socket && (
           <CheckInForm
             socket={socket}
             eventId={id!}
@@ -259,7 +223,7 @@ export const EventPage = () => {
           />
         )}
 
-        {viewMode === "student_chat" && (
+        {viewMode === "student_chat" && socket && (
           <div className="max-w-2xl mx-auto py-4 px-4 h-[calc(100vh-200px)]">
             <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">
               Live Chat
@@ -271,6 +235,7 @@ export const EventPage = () => {
     </div>
   );
 };
+
 
 async function fetchEventData(eventId?: string) {
   try {
