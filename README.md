@@ -36,6 +36,4 @@ The steps to run the client and server are the same:
 
 ### Deploy to AWS
 
-**A public test instance is available at https://google.com.**
-
-TODO
+**A public test instance is available at https://simplesignin.ddns.net/.**
