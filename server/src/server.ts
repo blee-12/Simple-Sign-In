@@ -118,6 +118,26 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("check_in_no_code", async (eventId, email) => {
+    const event = activeEvents.get(eventId);
+
+    if (!event) return socket.emit("error", "This event is not active right now.");
+
+    try {
+      await eventData.checkInUser(eventId, null, email);
+
+      const roomName = `${eventId}_chat`;
+      socket.join(roomName);
+      socket.emit("success_join");
+      
+      io.to(`${eventId}_creator`).emit("student_checked_in", email);
+
+    } catch (e: any) {
+      console.error("Check-in failed:", e);
+      socket.emit("error", "Database error during check-in.");
+    }
+  });
+
   // When the creator joins, then they get added to their own room for the codes.
   socket.on("join_creator", (eventId) => {     
      const event = activeEvents.get(eventId);

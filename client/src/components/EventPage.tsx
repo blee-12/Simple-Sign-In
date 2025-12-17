@@ -56,19 +56,32 @@ export const EventPage = () => {
 
       setNeedCode(result.need_code);
 
-      switch (result.role) {
-        case "creator": 
-            setViewMode("creator");
-            break; 
-        case "student_lobby":             
-            setViewMode("student_lobby");
-            break; 
-        case "no_event": 
-            navigate('/');
-            break; 
-        case "unauthed": 
-            navigate('/signup');
-            break; 
+      if (result.role === "student_lobby" && !result.need_code) {
+          console.log("Event does not require code. Auto-checking in...");
+          
+          newSocket?.once("error", (err) => {
+             console.warn("Auto-join failed:", err);
+             setViewMode("student_lobby"); 
+          });
+
+          // attempt the join
+          newSocket?.emit("check_in_no_code", id, result.userEmail);
+      } else { 
+
+        switch (result.role) {
+          case "creator": 
+              setViewMode("creator");
+              break; 
+          case "student_lobby":             
+              setViewMode("student_lobby");
+              break; 
+          case "no_event": 
+              navigate('/');
+              break; 
+          case "unauthed": 
+              navigate('/signup');
+              break; 
+        }
       }
     });
     
