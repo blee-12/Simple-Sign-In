@@ -2,10 +2,6 @@
 
 Simple Sign In is a web app designed to streamline event attendance management.
 
-## Features
-
-- Create and manage events
-
 ## Usage
 
 ### Docker Compose (Recommended)
