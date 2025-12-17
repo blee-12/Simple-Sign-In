@@ -23,7 +23,6 @@ function App() {
     <ContextWrapper>
       <Background>
         <>
-          {/* TODO replace false with session auth context */}
           <Navbar />
           <Routes>
             <Route path="/signup" element={<SignUp />}></Route>

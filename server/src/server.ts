@@ -29,7 +29,7 @@ for (const ev of env_vars)
 interface EventState {
   id: string;
   name: string;
-  currentCode: string; // deal with code bs later tbh.
+  currentCode: string;
   intervalId: NodeJS.Timeout; 
 }
 

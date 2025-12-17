@@ -31,7 +31,6 @@ export const ContextWrapper = ({ children }: { children: ReactNode }) => {
     if (res.ok) {
       const resJson = await res.json();
       if (resJson.data.first_name) setAuthState("FullUser");
-      //TODO: check response to determine type of user
     }
   }
 
