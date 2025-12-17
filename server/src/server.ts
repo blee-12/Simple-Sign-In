@@ -72,7 +72,6 @@ const sessionMiddleware = session({
 });
 app.use(sessionMiddleware);
 
-configRoutes(app);
 
 
 /* ~~ SOCKET.IO SECTION ~~ */
@@ -180,6 +179,15 @@ io.on("connection", (socket) => {
       socket.emit("active");
     }
   })
+
+  socket.on("rejoin", (eventId) => {
+    const event = activeEvents.get(eventId);
+    if (!event) return socket.emit("error", "Event is not active.");
+    
+    socket.join(`${eventId}_chat`);
+    
+    socket.emit("success_join");
+  });
 });
 
 
@@ -276,6 +284,8 @@ async function syncActiveEvents() {
         }
 }
 
+// do this down here for dependency injection.
+configRoutes(app, io, activeEvents);
 
 // fallback error handler
 // app.use((err: any, req: Request, res: Response, next: any) => {

@@ -33,11 +33,11 @@ export const NonActiveEvent: React.FC<NonActiveProps> = ({ eventName }) => {
             {/* Main Content */}
             <div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900 tracking-tight">
-                Not quite ready yet
+                This event is not active!
             </h2>
             <p className="mt-2 text-lg text-gray-600">
-                <span className="font-semibold text-gray-800">{eventName}</span> hasn't started just yet. 
-                Hang tight, we are setting things up!
+                <span className="font-semibold text-gray-800">{eventName}</span> is not active. 
+                You can't access an event that is not active. Contact the event organizer if you believe this is a mistake
             </p>
             </div>
 
@@ -61,7 +61,7 @@ export const NonActiveEvent: React.FC<NonActiveProps> = ({ eventName }) => {
             </button>
             
             <p className="mt-4 text-sm text-gray-400">
-                Is this taking longer than expected? Contact the event organizer.
+                Did you expect this event to be active? Contact the event organizer.
             </p>
             </div>
         </div>
