@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { WEBSITE_URL } from "../../lib/assets";
 import TrashIconUrl from "../../assets/trash.svg";
 import EditIconUrl from "../../assets/edit.svg";
+import { useRequireFullUser } from "../../lib/RequireFullUser";
 
 // icons
 const TrashIcon = () => (
@@ -67,6 +68,7 @@ interface Filters {
 
 export function EventDashboard() {
   const navigate = useNavigate();
+  useRequireFullUser("You must have an account to view your dashboard");
   const [user, setUser] = useState<{ _id: string; email: string } | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
