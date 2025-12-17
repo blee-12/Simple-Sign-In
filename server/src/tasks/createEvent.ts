@@ -10,7 +10,7 @@ try {
     const start = new Date(now.getTime() + 100);
     const end = new Date(now.getTime() + 60 * 60 * 1000);
 
-    const ev = await eventData.createEvent(me._id.toString(), "Test Event - " + new Date().toString(), start, end, "Empty Description");
+    const ev = await eventData.createEvent(me._id.toString(), "Test Event - " + new Date().toString(), start, end, false, [], "Seeded Event");
 
     console.log(`New event:\n${ev.name}`);
     console.log(`Event ID:\n${ev._id}`);
