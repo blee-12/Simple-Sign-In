@@ -57,8 +57,12 @@ router.post("/signin", asyncRoute (
     let email = validateEmail(req.body.email);
     let password = req.body.password;
 
-    const user = await userData.getUserByEmail(email);
-    if (!user) throw new BadInputError("Email or password invalid");
+    let user;
+    try {
+      user = await userData.getUserByEmail(email);
+    } catch (_) {
+      throw new BadInputError("Email or password invalid");
+    }
     const result = await bcrypt.compare(password, user.password);
     if (!result) throw new BadInputError("Email or password invalid");
 
