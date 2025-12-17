@@ -11,10 +11,9 @@ export function useRequireFullUser(message: string) {
     if (authState !== "FullUser" && authState !== "loading") {
       const encodedMessage = encodeURIComponent(message);
       //delay until website can load profile/account info before navigating
-      setTimeout(() => {
-        if (authState === null || authState === "EmailOnly")
+      if (authState === null || authState === "EmailOnly")
           navigate(`/login?message=${encodedMessage}`);
-      }, 1500);
+      
     }
   }, [authState, message, navigate]);
 }
