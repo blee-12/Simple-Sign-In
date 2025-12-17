@@ -133,9 +133,9 @@ const eventRoutes = (io: Server, activeEvents: Map<string, any>) => {
             id = val.validateStrAsObjectId(id, 'Event ID');
             const event = await events.getEventByID(id)
 
-            // check if user is member
+            // check if user is member - attendee or logged in creator
             let email = req.session.email || ""
-            if (!event.attending_users.includes(email))
+            if (!event.attending_users.includes(email) && event.created_by.toHexString() != req.session._id)
                 throw new UnauthenticatedError("You are not authorized to view this resource");
 
             return res.status(200).json({data: event});
