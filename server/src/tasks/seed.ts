@@ -114,17 +114,17 @@ let active2: Event = {
 
 // create the signIn object for st1
 const signIn1: SignIn = {
-  userID: st1._id.toString(),
+  userID: st1.email.toString(),
   timestamp: new Date(),
 };
 
 const signIn2: SignIn = {
-  userID: st2._id.toString(),
+  userID: st2.email.toString(),
   timestamp: new Date(),
 };
 
 const signIn3: SignIn = {
-  userID: st3._id.toString(),
+  userID: st3.email.toString(),
   timestamp: new Date(),
 };
 
