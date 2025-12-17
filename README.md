@@ -4,7 +4,7 @@ Simple Sign In is a web app designed to streamline event attendance management.
 
 ## Features
 
-- Create and manage
+- Create and manage events
 
 ## Usage
 
@@ -25,6 +25,8 @@ docker compose up
 Use Node.js v24.12 LTS or greater.
 
 Note that MongoDB must be set up separately.
+Make sure to configure the `MONGODB_URI` environment variable, as the
+default is meant for use with Docker Compose.
 
 The steps to run the client and server are the same:
 1. `cd` into the appropriate directory
