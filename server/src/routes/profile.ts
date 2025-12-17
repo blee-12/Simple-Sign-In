@@ -3,6 +3,7 @@ import { asyncRoute, requireAuth } from "./utils";
 import * as val from "../../../common/validation";
 import users from "../data/users";
 import { BadInputError } from "../../../common/errors";
+import bcrypt from "bcryptjs";
 const router = Router();
 
 router.get(
@@ -27,8 +28,19 @@ router.put(
     let email = req.session.email || "";
     let { first_name, last_name, password } = req.body; // user inputs. Must provide at least 1
 
-    if (!first_name.trim() && !last_name.trim() && !password().trim())
+    if (!first_name.trim() && !last_name.trim() && !password)
       throw new BadInputError("No updated fields provided");
+
+    if (first_name)
+      first_name = val.validateFirstName(first_name);
+
+    if (last_name)
+      last_name = val.validateLastName(last_name);
+
+    if (password) {
+      val.validatePassword(password);
+      password = await bcrypt.hash(password, 10);
+    }
 
     const user = await users.editUser(email, first_name, last_name, password);
     const response = {
