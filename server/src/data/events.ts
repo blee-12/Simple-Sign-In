@@ -138,6 +138,26 @@ let exportedMethods = {
   
       return ret;
     },
+    
+    async deleteAllEventsByUser(userId: string) {
+      userId = validateStrAsObjectId(userId);
+
+      // Verify the user exists
+      const user = await userData.getUserByID(userId);
+      if (!user) throw new NotFoundError(`User with id ${userId} not found`);
+
+      const eventCollection = await events();
+  
+      // Delete all events created by this user
+      const result = await eventCollection.deleteMany({ 
+        created_by: new ObjectId(userId) 
+      });
+
+      return {
+        deletedCount: result.deletedCount,
+        acknowledged: result.acknowledged
+      };
+    },
 
     async getEventByName(name: string) {
       name = validateAndTrimString(name, "Name", 5, 100);

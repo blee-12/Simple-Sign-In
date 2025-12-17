@@ -461,16 +461,24 @@ function EventList({
 
             {user && event.created_by === user._id && (
               <div className="flex gap-1 flex-shrink-0">
-                <Link to={`/event/edit/${event._id}`}>
-                  <button className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-blue-600">
-                    <EditIcon />
-                  </button>
-                </Link>
-                <Link to={`/event/delete/${event._id}`}>
-                  <button className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-red-600">
-                    <TrashIcon />
-                  </button>
-                </Link>
+                <button
+                  className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-blue-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/event/edit/${event._id}`);
+                  }}
+                >
+                  <EditIcon />
+                </button>
+                <button
+                  className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-red-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/event/delete/${event._id}`);
+                  }}
+                >
+                  <TrashIcon />
+                </button>
               </div>
             )}
           </div>

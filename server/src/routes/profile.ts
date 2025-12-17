@@ -2,6 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import { asyncRoute, requireAccount } from "./utils";
 import * as val from "../../../common/validation";
 import users from "../data/users";
+import events from "../data/events";
 import { BadInputError } from "../../../common/errors";
 import bcrypt from "bcryptjs";
 const router = Router();
@@ -65,12 +66,13 @@ router.delete(
         return res.status(500).send({ error: "Error signing out" });
       }
     });
-
     const user = await users.deleteUser(id);
+    const deletedEvents = await events.deleteAllEventsByUser(id);
     const response = {
       email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
+      deletedCount: deletedEvents.deletedCount
     };
     res.status(200).json({ data: response });
   })
