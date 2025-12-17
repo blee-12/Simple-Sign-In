@@ -154,6 +154,7 @@ export function Profile() {
 
       const data = await res.json();
       console.log("Profile deleted:", data);
+      context.setAuthState(null);
       //setTime to navigate back to homepage in 3 seconds
       setTimeout(() => {
         navigate("/");
@@ -273,7 +274,7 @@ export function Profile() {
           onClick={handleDeleteProfile}
           className="w-full flex items-center justify-center bg-red-500 text-white font-medium py-3 rounded-lg transition hover:bg-red-600 active:bg-red-700 mt-3 hover:cursor-pointer hover:scale-105"
         >
-          <img src={trashIcon} alt="Delete" className="w-5 h-5 mr-2" />
+          <img src={trashIcon} alt="Delete" className="w-5 h-5 mr-2 invert" />
           Delete Profile
         </button>
       </div>
