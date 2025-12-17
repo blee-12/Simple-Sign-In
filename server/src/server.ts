@@ -179,6 +179,15 @@ io.on("connection", (socket) => {
       socket.emit("active");
     }
   })
+
+  socket.on("rejoin", (eventId) => {
+    const event = activeEvents.get(eventId);
+    if (!event) return socket.emit("error", "Event is not active.");
+    
+    socket.join(`${eventId}_chat`);
+    
+    socket.emit("success_join");
+  });
 });
 
 

@@ -5,7 +5,8 @@ export interface ClientToServerEvents {
   check_in: (eventId: string, code: string, studentName: string) => void;
   send_message: (eventId: string, message: string) => void;
   is_active: (eventId: string) => void;
-  check_in_no_code: (eventId: string, email: string) => void
+  check_in_no_code: (eventId: string, email: string) => void;
+  rejoin: (eventId: string) => void;
 }
 
 export interface ServerToClientEvents {
