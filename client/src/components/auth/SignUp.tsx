@@ -97,7 +97,6 @@ export function SignUp() {
       newErrors.push(err instanceof Error ? err.message : "Invalid Code");
     }
 
-
     setErrors(newErrors);
 
     if (newErrors.length === 0) {
@@ -238,7 +237,7 @@ export function SignUp() {
             disabled={loading}
             className="w-full bg-blue-500 text-white py-3 rounded-lg"
           >
-            {loading ? "Signing Up..." : "Complete Sign Up"}
+            {loading ? "Loading..." : "Complete Sign Up"}
           </button>
         </form>
       )}
