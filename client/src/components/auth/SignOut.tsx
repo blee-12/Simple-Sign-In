@@ -7,7 +7,7 @@ import { WEBSITE_URL } from "../../lib/assets";
 type SignOutState = "inProgress" | "complete" | "error";
 
 export default function SignOut() {
-  const { authState } = useGetContext();
+  const { authState, setAuthState } = useGetContext();
   const navigate = useNavigate();
   const [isSignedOut, setSignedOut] = useState<SignOutState>("inProgress");
 
@@ -26,6 +26,7 @@ export default function SignOut() {
         return;
       }
       setSignedOut("complete");
+      setAuthState(null);
     } catch {
       setSignedOut("error");
     }
