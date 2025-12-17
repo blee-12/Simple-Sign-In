@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { WEBSITE_URL } from "../../lib/assets";
 import TrashIconUrl from "../../assets/trash.svg";
 import EditIconUrl from "../../assets/edit.svg";
@@ -424,45 +424,51 @@ function EventList({
       {events.map((event) => (
         <li
           key={event._id}
-          className="p-3 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all"
+          className="p-3 rounded-lg bg-gray-50 border border-gray-200 hover:shadow-md hover:border-gray-300 transition-all hover:underline hover:cursor-pointer hover:scale-105"
         >
-          <div className="flex justify-between items-start gap-3">
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-gray-900 truncate">
-                {event.name}
-              </h3>
-              <p className="text-xs text-gray-600 mt-1">
-                {new Date(event.time_start).toLocaleString()} –{" "}
-                {new Date(event.time_end).toLocaleString()}
-              </p>
+          <Link to={`/event/${event._id}`}>
+            <div className="flex justify-between items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 truncate">
+                  {event.name}
+                </h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  {new Date(event.time_start).toLocaleString()} -{" "}
+                  {new Date(event.time_end).toLocaleString()}
+                </p>
 
-              {event.code && (
-                <span className="inline-block text-xs font-mono bg-blue-50 text-blue-700 px-2 py-0.5 rounded mt-2">
-                  {event.code}
-                </span>
-              )}
+                {event.code && (
+                  <span className="inline-block text-xs font-mono bg-blue-50 text-blue-700 px-2 py-0.5 rounded mt-2">
+                    {event.code}
+                  </span>
+                )}
 
-              <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                {event.description}
-              </p>
+                <p className="text-xs text-gray-500 mt-2 line-clamp-2">
+                  {event.description}
+                </p>
 
-              <p className="text-xs text-gray-500 mt-2">
-                {event.attending_users.length} attendee
-                {event.attending_users.length !== 1 ? "s" : ""}
-              </p>
-            </div>
-
-            {user && event.created_by === user._id && (
-              <div className="flex gap-1 flex-shrink-0">
-                <button className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-blue-600">
-                  <EditIcon />
-                </button>
-                <button className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-red-600">
-                  <TrashIcon />
-                </button>
+                <p className="text-xs text-gray-500 mt-2">
+                  {event.attending_users.length} attendee
+                  {event.attending_users.length !== 1 ? "s" : ""}
+                </p>
               </div>
-            )}
-          </div>
+
+              {user && event.created_by === user._id && (
+                <div className="flex gap-1 flex-shrink-0">
+                  <Link to={`/event/edit/${event._id}`}>
+                    <button className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-blue-600">
+                      <EditIcon />
+                    </button>
+                  </Link>
+                  <Link to={`/event/delete/${event._id}`}>
+                    <button className="p-2 rounded hover:bg-gray-200 transition text-gray-600 hover:text-red-600">
+                      <TrashIcon />
+                    </button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </Link>
         </li>
       ))}
     </ul>
