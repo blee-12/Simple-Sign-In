@@ -10,7 +10,7 @@ export interface ClientToServerEvents {
 
 export interface ServerToClientEvents {
   code_update: (code: string) => void; // only to event creator
-  student_checked_in: (studentName: string) => void;
+  user_checked_in: (checkInData: { userID: string; timestamp: string }) => void
   chat_message: (sender: string, message: string) => void;
   error: (msg: string) => void;
   success_join: () => void;

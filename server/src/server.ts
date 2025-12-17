@@ -110,7 +110,10 @@ io.on("connection", (socket) => {
       socket.join(roomName);
       socket.emit("success_join");
       
-      io.to(`${eventId}_creator`).emit("student_checked_in", email);
+      io.to(`${eventId}_creator`).emit("user_checked_in", { 
+        userID: email, // or ID
+        timestamp: new Date().toISOString() 
+      });
 
     } catch (e: any) {
       console.error("Check-in failed:", e);
@@ -130,7 +133,10 @@ io.on("connection", (socket) => {
       socket.join(roomName);
       socket.emit("success_join");
       
-      io.to(`${eventId}_creator`).emit("student_checked_in", email);
+      io.to(`${eventId}_creator`).emit("user_checked_in", { 
+        userID: email, // or ID
+        timestamp: new Date().toISOString() 
+      });
 
     } catch (e: any) {
       console.error("Check-in failed:", e);
