@@ -72,7 +72,6 @@ const sessionMiddleware = session({
 });
 app.use(sessionMiddleware);
 
-configRoutes(app);
 
 
 /* ~~ SOCKET.IO SECTION ~~ */
@@ -276,6 +275,8 @@ async function syncActiveEvents() {
         }
 }
 
+// do this down here for dependency injection.
+configRoutes(app, io, activeEvents);
 
 // fallback error handler
 // app.use((err: any, req: Request, res: Response, next: any) => {

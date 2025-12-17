@@ -13,6 +13,7 @@ import { EventPage } from "./components/EventPage";
 import EditEvent from "./components/events/EditEvent";
 import DeleteEvent from "./components/events/DeleteEvent";
 import ErrorPage from "./components/ErrorPage";
+import { JoinEvent } from "./components/JoinEvent"
 
 function App() {
   const location = useLocation();
@@ -33,6 +34,7 @@ function App() {
             <Route path="/event/edit/:id" element={<EditEvent />}></Route>
             <Route path="event/delete/:id" element={<DeleteEvent />}></Route>
             <Route path="/event/:id" element={<EventPage />}></Route>
+            <Route path="/event/join/:token" element={<JoinEvent />} />
             <Route
               path="*"
               element={
